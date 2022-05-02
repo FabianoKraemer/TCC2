@@ -1,3 +1,6 @@
+#ifndef TEMPERATURA_h__
+#define TEMPERATURA_h__
+
 #include "Arduino.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -15,3 +18,5 @@ private:
 
 
 };
+
+#endif //TEMPERATURA_h__

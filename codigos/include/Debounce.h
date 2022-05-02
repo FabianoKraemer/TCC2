@@ -11,11 +11,12 @@
 class Debounce
 {
     public:
-        Debounce(unsigned long dt);
-        bool debounce();
+        Debounce(unsigned long dt); // variavel dt não sendo usada para nada por enquanto
+        //Debounce();
+        bool debounce(unsigned long tempo);
 
     private:
-        unsigned long _dt, _last;
+        unsigned long _last;
 };
 
 #endif //DEBOUNCE_H__
