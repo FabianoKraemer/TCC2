@@ -12,7 +12,7 @@ const char* mqtt_server = "projetoifsc.duckdns.org";
 //IPAddress gateway(192, 168, 15, 1);
 //IPAddress subnet(255, 255, 255, 0);
 unsigned long prevMillis = 0;
-unsigned long delayLoop = 10000; // em milisegundos
+unsigned long delayLoop = 5000; // em milisegundos
 
 WiFiClient WifiClient;
 //WifiClient.config(local_ip,gateway, subnet);
@@ -27,16 +27,46 @@ const int capacity = JSON_OBJECT_SIZE(MSG_BUFFER_SIZE);
 StaticJsonDocument<capacity> doc;
 char dados[capacity];
 
-float bateria = 0;
+// Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem
+float tempo_at = 5000; // 5000 milisegundos por padrão
+
+// Variáveis sensores de temperatura. DS18B20 range: -55°C a +125°C. Valores iniciados com -127 pois é o valor padrão da biblioteca caso sensor esteja desconectado.
+static float Temp1 = -127;
+static float Temp2 = -127;
+static float Temp3 = -127;
+static float Temp4 = -127;
+static float Temp5 = -127;
+static float Temp6 = -127;
+static float Temps[6] = {-127, -127, -127, -127, -127, -127,};
+volatile static bool sensores_conectados[6]; // vetor booleano com os estados das portas dos sensores de temperatura. True para conectado, false para desconectado
+int qtdSensores = 0; // quantidade de sensores conectados
+//static const int oneWireBus = 15; // Porta que os NTCs digitais estão conectados
+//int ndispositivos = 0; // Número de sensores DS18B20 conectados
+
+// Variáveis Wattímetro. Valores iniciados com negativo para sinalizar não uso/conexão do Wattímetro
+static float W = -1;   // Potência instantânea
+static float V = -1;   // Tensão
+static float I = -1;   // Corrente
+static float FP = -1;  // Fator de Potência
+static float Freq = -1;// Frequência da rede
+static float Wh = -1;  // Watt hora
+
+// Variáveis dos sensores de pressão. Valores iniciados com negativo para sinalizar não uso/conexão do Wattímetro
+static float P1 = -1;
+static float P2 = -2;
+
+// Indicador de percentual de carga da bateria
+float percentual_bateria = 0;
+
+
 float bateriaMin = 5000;
 float bateriaMax = 0;
 const int porta_bateria = 32;
 
 unsigned long tempo_db_Pinos_temp = 300; // tempo do debouncer das portas dos sensores de temperatura, em milisegundos
-Interrupcoes interrupt(tempo_db_Pinos_temp);
 
 //interrupt.tempo_debounce(testando);
 
-volatile static bool sensores_conectados[6]; // vetor booleano com os estados das portas dos sensores de temperatura. True para conectado, false para desconectado
+
 
 #endif //VARIAVEIS_h__

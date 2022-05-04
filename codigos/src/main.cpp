@@ -1,6 +1,19 @@
 #include "Includes.h"
+#include <OneWire.h> // Protocolo da Dallas, usado para os NTCs digitais DS18B20
+#include <DallasTemperature.h> // Biblioteca do NTC digital DS18B20
+#include "HardwareSerial.h" //somente para a ESP32
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Interrupcoes interrupt(tempo_db_Pinos_temp);
+
+// Objetos para lidar com os DS18B20
+const int oneWireBus = 15; //porta que os NTCs digitais estão conectados
+OneWire oneWire(oneWireBus);
+DallasTemperature sensortemp(&oneWire);
+
+
+// variable to hold device addresses
+DeviceAddress Thermometer;
 
 void setup_wifi() {
 
@@ -66,24 +79,54 @@ void reconnect() {
 
 void indice_bateria(){
   for (int i = 0; i < 100; i++){
-    bateria = analogRead(porta_bateria) + bateria;
+    percentual_bateria = analogRead(porta_bateria) + percentual_bateria;
   }
-  bateria = bateria / 100;
+  percentual_bateria = percentual_bateria / 100;
 
-  if (bateriaMax <= bateria) bateriaMax = bateria;
-  if (bateriaMin >= bateria) bateriaMin = bateria;
+  if (bateriaMax <= percentual_bateria) bateriaMax = percentual_bateria;
+  if (bateriaMin >= percentual_bateria) bateriaMin = percentual_bateria;
 
-  doc["rawBateria"] = bateria;
+  doc["Bat"] = percentual_bateria;
   doc["bateriaMax"] = bateriaMax;
   doc["bateriaMin"] = bateriaMin;
 
-  int indiceBateria = map(bateria, 2800, 4094, 0, 100);
+  int indiceBateria = map(percentual_bateria, 2800, 4094, 0, 100);
 
   if (indiceBateria <= 0) indiceBateria = 0;
   else if (indiceBateria >= 100) indiceBateria = 100;
-  doc["indiceBateria"] = indiceBateria;
+  doc["Bat"] = indiceBateria;
 
   }
+
+void temperatura(){
+    
+    interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
+    interrupt.retorna_vetor(sensores_conectados); // Verifica quais portas estão com algo conectado ou não. True para conectado, false para desconectado.
+
+    String vetor; // Para imprimir no serial monitor
+    qtdSensores = 0;
+    for (int n = 0; n <= 5; n++){
+      if (sensores_conectados[n]) {
+        qtdSensores = qtdSensores + 1;
+        sensortemp.requestTemperatures();
+        sensortemp.getAddress(Thermometer, n);
+        Temps[n] = sensortemp.getTempC(Thermometer);
+        doc["T"][n] = Temps[n];
+      }   
+      if (!sensores_conectados[n]) {
+        //qtdSensores = qtdSensores - 1;
+        Temps[n] = -127;
+        doc["T"][n] = Temps[n];
+      }
+      vetor = vetor + sensores_conectados[n];
+      vetor = vetor + " | ";
+    }
+
+    Serial.println(vetor);
+    Serial.print("qtde de sensores: ");
+    Serial.println(qtdSensores);
+
+}
 
 void setup(){
 
@@ -93,8 +136,39 @@ void setup(){
   pinMode(17, INPUT);
   pinMode(32, INPUT); // GPIO bateria
 
-  interrupt.atualizar_estado_portas();
-  interrupt.ativar_interrupcoes();
+  // Declaração das variáveis no documeto JSON
+  //doc["T1"] = Temp1; // T1 - Sensor do pino 1. No vetor está na posição 0. Está no GPIO 16.
+  //doc["T2"] = Temp2; // T2 - Sensor do pino 2. No vetor está na posição 1. Está no GPIO 17.
+  //doc["T3"] = Temp3; // T3 - Sensor do pino 3. No vetor está na posição 2. Está no GPIO 5.
+  //doc["T4"] = Temp4; // T4 - Sensor do pino 4. No vetor está na posição 3. Está no GPIO 18.
+  //doc["T5"] = Temp5; // T5 - Sensor do pino 5. No vetor está na posição 4. Está no GPIO 19.
+  //doc["T6"] = Temp6; // T6 - Sensor do pino 6. No vetor está na posição 5. Está no GPIO 21.
+  doc["T"][0] = Temp1;
+  doc["T"][1] = Temp2;
+  doc["T"][2] = Temp3;
+  doc["T"][3] = Temp4;
+  doc["T"][4] = Temp5;
+  doc["T"][5] = Temp6;
+
+  doc["W"] = W; // potência Watts
+  doc["V"] = V; // tensão
+  doc["I"] = I; // corrente
+  doc["FP"] = FP; // fator potência
+  doc["Wh"] = Wh; // watt hora
+  doc["freq"] = Freq; // frequência
+  doc["P1"] = P1; // Sensor de pressão 1. Está no GPIO 35
+  doc["P2"] = P2; // Sensor de pressão 2. Está no GPIO 34
+  doc["Bat"] = percentual_bateria; // Percentual da bateria
+  doc["Tat"] = tempo_at; // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem
+
+  interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
+  interrupt.ativar_interrupcoes(); // Ativa as interrupções das portas dos sensores de temperatura.
+
+  //Serial.print("Locating devices...");
+  sensortemp.begin(); // Inicialização dos DS18B20 e rastreio dos conectados
+  //Serial.print("Found ");
+  //Serial.print(sensortemp.getDeviceCount(), DEC);
+  //Serial.println(" devices.");
 
   //////////////
   setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager
@@ -107,40 +181,33 @@ void setup(){
 
 void loop() { // Print pin levels every 50ms
 
-  if (!client.connected()) {
-    reconnect();
-  }
+  if (!client.connected()) reconnect(); 
   client.loop();
 
   indice_bateria();
 
   serializeJson(doc, dados);
 
+  ////////////////////////////////////////////////////////
   unsigned long tempo = millis();
-  
-  if((tempo - prevMillis) >= delayLoop){
+
+  if ((tempo - prevMillis) >= delayLoop){
     client.publish("Bateria", dados);
-    Serial.println((tempo - prevMillis));
+    //Serial.println((tempo - prevMillis)); // tempo entre loops
     prevMillis = tempo;
 
-    interrupt.imprimir();
-    volatile bool testevetor[6];
-    interrupt.retorna_vetor(testevetor);
+    temperatura();
+    //interrupt.imprimir();
 
-    String vetor; 
+    for (int i = 0; i < 6; i++){
 
-    for (int n = 0; n <= 5; n++){
-      vetor = vetor + testevetor[n];
-      vetor = vetor + " | ";
+      Serial.print("Temperaturas: ");
+      Serial.print(Temps[i]);
+      Serial.print("C° | ");
+      Serial.println("");
     }
-
-  Serial.println(vetor);
-    
   }
-  
-  
+////////////////////////////////////////////////////////
 
-    
-  
 
 }

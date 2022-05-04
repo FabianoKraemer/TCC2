@@ -4,7 +4,7 @@
 //static const unsigned long tempo_debounce = 300; // em milissegundos
 
   unsigned long tempo_db = 300;
-  Debounce _deb1(tempo_db); // Debouncer para pino 1 sensor de temperatura
+  Debounce _deb1(tempo_db); // Debouncer para pinos sensores de temperatura
 
 //  Debounce _deb2(tempo_debounce); // Debouncer para pino 2 sensor de temperatura
 //  Debounce _deb3(tempo_debounce); // Debouncer para pino 3 sensor de temperatura
@@ -31,7 +31,7 @@ void Interrupcoes::tempo_debounce(unsigned long teste){
 }
 
 void Interrupcoes::retorna_vetor(volatile bool estado_pinos[6]){
-  estado_pinos = teste_vetor;
+  for(int n = 0; n < 6; n++) estado_pinos[n] = teste_vetor[n];
 } 
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_1() {
