@@ -1,0 +1,745 @@
+[
+    {
+        "id": "1a7acb0f.16a335",
+        "type": "tab",
+        "label": "TCC",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "b02dd975.0b3bf8",
+        "type": "mqtt in",
+        "z": "1a7acb0f.16a335",
+        "name": "Subscriber",
+        "topic": "Bateria",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "bd075b1.4fd12a8",
+        "x": 180,
+        "y": 60,
+        "wires": [
+            [
+                "efc7db1a.010e88"
+            ]
+        ]
+    },
+    {
+        "id": "d31258f2.b72cb8",
+        "type": "debug",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "efc7db1a.010e88",
+        "type": "json",
+        "z": "1a7acb0f.16a335",
+        "name": "dados",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 390,
+        "y": 60,
+        "wires": [
+            [
+                "d31258f2.b72cb8",
+                "a060cc15.fb1ca"
+            ]
+        ]
+    },
+    {
+        "id": "a060cc15.fb1ca",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "//var teste = msg.payload[\"pressao\"];\n//msg.payload = teste;\n//return msg;\n\nvar msg1 = { payload: msg.payload[\"Bat\"]};\nvar msg2 = { payload: msg.payload[\"T\"][0]};\nvar msg3 = { payload: msg.payload[\"T\"][1]};\nvar msg4 = { payload: msg.payload[\"T\"][2]};\nvar msg5 = { payload: msg.payload[\"T\"][3]};\nvar msg6 = { payload: msg.payload[\"T\"][4]};\nvar msg7 = { payload: msg.payload[\"T\"][5]};\nvar msg8 = { payload: msg.payload[\"W\"]};\nvar msg9 = { payload: msg.payload[\"V\"]};\nvar msg10 = { payload: msg.payload[\"I\"]};\nvar msg11 = { payload: msg.payload[\"FP\"]};\nvar msg12 = { payload: msg.payload[\"Wh\"]};\nvar msg13 = { payload: msg.payload[\"freq\"]};\nvar msg14 = { payload: msg.payload[\"P1\"]};\nvar msg15 = { payload: msg.payload[\"P2\"]};\n\n\nreturn [msg1, msg2, msg3, msg4, msg5, msg6, msg7, \n        msg8, msg9, msg10, msg11, msg12, msg13, msg14, msg15];",
+        "outputs": 15,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 460,
+        "y": 340,
+        "wires": [
+            [
+                "456afcf4.395794"
+            ],
+            [
+                "43b31019.c9944"
+            ],
+            [
+                "367d0005.6d759"
+            ],
+            [
+                "c3264f12.5984c"
+            ],
+            [
+                "ad786165.2a2ed"
+            ],
+            [
+                "eb041d34.a868f"
+            ],
+            [
+                "20c4acce.512284"
+            ],
+            [
+                "eef0ae54.837aa"
+            ],
+            [
+                "5cdc2f0f.36ddc"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "82ce56d0.055aa8",
+        "type": "influxdb out",
+        "z": "1a7acb0f.16a335",
+        "influxdb": "40f5af08.bd742",
+        "name": "Bateria",
+        "measurement": "Bateria",
+        "precision": "s",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "bucket",
+        "x": 340,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "8362c3d9.c8fad",
+        "type": "ui_gauge",
+        "z": "1a7acb0f.16a335",
+        "name": "Temperatura 1",
+        "group": "79e3addd.870db4",
+        "order": 8,
+        "width": "0",
+        "height": "0",
+        "gtype": "gage",
+        "title": "Temperatura sensor 1",
+        "label": "C°",
+        "format": "{{value}}",
+        "min": "-55",
+        "max": "125",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1040,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "43b31019.c9944",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {payload : {\"group\": {\"hide\": [\"TCC_Sensor_1\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Sensor_1\",]}}}\n\nreturn [msg, controleUI];\n\n//    controleUI = {\n//        \"group\": {\n//            \"hide\": [\n//                \"TCC_Sensor_1\",\n//            ],\n//        \"show\": [\n//            \"Admin_Control\",\n//            \"Admin_admin2\"\n//            ]\n//        }\n//    }",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 160,
+        "wires": [
+            [
+                "8362c3d9.c8fad"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "86b24f5c.dbfb4",
+        "type": "ui_gauge",
+        "z": "1a7acb0f.16a335",
+        "name": "Temperatura 3",
+        "group": "d50dfe8b.6abef",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Temperatura sensor 3",
+        "label": "C°",
+        "format": "{{value}}",
+        "min": "-55",
+        "max": "125",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1040,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "e6e8b785.b28348",
+        "type": "ui_gauge",
+        "z": "1a7acb0f.16a335",
+        "name": "Temperatura 4",
+        "group": "b1c59db3.71ea3",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "gtype": "donut",
+        "title": "Temperatura sensor 4",
+        "label": "C°",
+        "format": "{{value | number:2}}",
+        "min": "-55",
+        "max": "125",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1040,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "bf520dbe.5238d",
+        "type": "ui_gauge",
+        "z": "1a7acb0f.16a335",
+        "name": "Temperatura 5",
+        "group": "dad33722.903508",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "gtype": "compass",
+        "title": "Temperatura sensor 5",
+        "label": "C°",
+        "format": "{{value}}",
+        "min": "-55",
+        "max": "125",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1040,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "7ddd5649.51a3a8",
+        "type": "ui_gauge",
+        "z": "1a7acb0f.16a335",
+        "name": "Temperatura 6",
+        "group": "f45378e8.242238",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "gtype": "wave",
+        "title": "Temperatura sensor 6",
+        "label": "C°",
+        "format": "{{value}}",
+        "min": "-55",
+        "max": "125",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1040,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "456afcf4.395794",
+        "type": "ui_gauge",
+        "z": "1a7acb0f.16a335",
+        "name": "Percentual Bateria",
+        "group": "fbc95915.298378",
+        "order": 5,
+        "width": "2",
+        "height": "2",
+        "gtype": "wave",
+        "title": "Bateria",
+        "label": "%",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 830,
+        "y": 120,
+        "wires": [],
+        "icon": "font-awesome/fa-battery"
+    },
+    {
+        "id": "63b93853.403738",
+        "type": "ui_chart",
+        "z": "1a7acb0f.16a335",
+        "name": "Graficos",
+        "group": "b1c59db3.71ea3",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Grafico",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": "10",
+        "removeOlderPoints": "1000",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 1020,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "af87da64.70d9c8",
+        "type": "change",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 360,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8296ef1b.98031",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "bf580dbe.73685",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "Watt",
+        "label": "Watt",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 1050,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "5cdc2f0f.36ddc",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "bf580dbe.73685",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "Tensão",
+        "label": "Tensão",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 800,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "2e2ecea9.8acc02",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "bf580dbe.73685",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "Watt",
+        "label": "Watt",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 790,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "a310cd57.7e3bc",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "bf580dbe.73685",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "Watt",
+        "label": "Watt",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 790,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "42010708.b07dc8",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "bf580dbe.73685",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "Watt",
+        "label": "Watt",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 790,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "fcdcb99b.35ac48",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "bf580dbe.73685",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "Watt",
+        "label": "Watt",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "x": 790,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "eef0ae54.837aa",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -1) {\n    controleUI = {payload : {\"group\": {\"show\": [\"TCC_Wattimetro\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Wattimetro\",]}}}\n\nreturn [msg, controleUI];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 440,
+        "wires": [
+            [
+                "8296ef1b.98031"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "367d0005.6d759",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {payload : {\"group\": {\"hide\": [\"TCC_Sensor_2\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Sensor_2\",]}}}\n\nreturn [msg, controleUI];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 200,
+        "wires": [
+            [
+                "e9d0ff53.eaac4"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "c3264f12.5984c",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {payload : {\"group\": {\"hide\": [\"TCC_Sensor_3\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Sensor_3\",]}}}\n\nreturn [msg, controleUI];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 240,
+        "wires": [
+            [
+                "86b24f5c.dbfb4"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "ad786165.2a2ed",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {payload : {\"group\": {\"hide\": [\"TCC_Sensor_4\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Sensor_4\",]}}}\n\nreturn [msg, controleUI];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 280,
+        "wires": [
+            [
+                "e6e8b785.b28348",
+                "63b93853.403738"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "eb041d34.a868f",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {payload : {\"group\": {\"hide\": [\"TCC_Sensor_5\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Sensor_5\",]}}}\n\nreturn [msg, controleUI];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 360,
+        "wires": [
+            [
+                "bf520dbe.5238d"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "20c4acce.512284",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {payload : {\"group\": {\"hide\": [\"TCC_Sensor_6\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Sensor_6\",]}}}\n\nreturn [msg, controleUI];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 800,
+        "y": 400,
+        "wires": [
+            [
+                "7ddd5649.51a3a8"
+            ],
+            [
+                "92324005.9c458"
+            ]
+        ]
+    },
+    {
+        "id": "92324005.9c458",
+        "type": "ui_ui_control",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "events": "all",
+        "x": 1060,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e9d0ff53.eaac4",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "c070d0ed.d9782",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "name",
+        "label": "Temperatura",
+        "format": "{{value | number:2}}C°",
+        "layout": "col-center",
+        "x": 1010,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "bd075b1.4fd12a8",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "370",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "40f5af08.bd742",
+        "type": "influxdb",
+        "hostname": "localhost",
+        "port": "8086",
+        "protocol": "http",
+        "database": "projetoIFSC",
+        "name": "Bateria",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "1.x",
+        "url": "http://localhost:8086",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "79e3addd.870db4",
+        "type": "ui_group",
+        "name": "Sensor 1",
+        "tab": "2118dd5a.5f9512",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": true
+    },
+    {
+        "id": "d50dfe8b.6abef",
+        "type": "ui_group",
+        "name": "Sensor 3",
+        "tab": "2118dd5a.5f9512",
+        "order": 5,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "b1c59db3.71ea3",
+        "type": "ui_group",
+        "name": "Sensor 4",
+        "tab": "2118dd5a.5f9512",
+        "order": 4,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "dad33722.903508",
+        "type": "ui_group",
+        "name": "Sensor 5",
+        "tab": "2118dd5a.5f9512",
+        "order": 6,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "f45378e8.242238",
+        "type": "ui_group",
+        "name": "Sensor 6",
+        "tab": "2118dd5a.5f9512",
+        "order": 7,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "fbc95915.298378",
+        "type": "ui_group",
+        "name": "Bateria",
+        "tab": "2118dd5a.5f9512",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": true
+    },
+    {
+        "id": "bf580dbe.73685",
+        "type": "ui_group",
+        "name": "Wattimetro",
+        "tab": "2118dd5a.5f9512",
+        "order": 8,
+        "disp": true,
+        "width": "6",
+        "collapse": true
+    },
+    {
+        "id": "c070d0ed.d9782",
+        "type": "ui_group",
+        "name": "Sensor 2",
+        "tab": "2118dd5a.5f9512",
+        "order": 3,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "2118dd5a.5f9512",
+        "type": "ui_tab",
+        "name": "TCC",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]

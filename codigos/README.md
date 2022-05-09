@@ -1,5 +1,10 @@
 # TCC2
 
+Versão 0.53
+
+- Criação tasks enviar_dados, receber_dados e lere_sensores;
+- Testes com tasks, verificando tempo necessário para execução da tarefa e consumo máximo de memória
+
 Versão 0.52
 
 - Função getDeviceCount da biblioteca DallasTemperature incompatível com VisualStudioCode/PlatformIO;

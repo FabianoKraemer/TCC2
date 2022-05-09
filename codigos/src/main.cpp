@@ -8,12 +8,17 @@ Interrupcoes interrupt(tempo_db_Pinos_temp);
 
 // Objetos para lidar com os DS18B20
 const int oneWireBus = 15; //porta que os NTCs digitais estão conectados
-OneWire oneWire(oneWireBus);
-DallasTemperature sensortemp(&oneWire);
+OneWire oneWire(oneWireBus); // Prepara uma instância oneWire para comunicar com qualquer outro dispositivo oneWire.
+DallasTemperature sensortemp(&oneWire); // Passa uma referência oneWire para a biblioteca DallasTemperature.
 
 
 // variable to hold device addresses
 DeviceAddress Thermometer;
+
+long tempo_task_enviar_dados = 3000;
+long tempo_task_receber_dados = 1000;
+long tempo_task_ler_sensores = 5000;
+
 
 void setup_wifi() {
 
@@ -103,13 +108,13 @@ void temperatura(){
     interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
     interrupt.retorna_vetor(sensores_conectados); // Verifica quais portas estão com algo conectado ou não. True para conectado, false para desconectado.
 
-    String vetor; // Para imprimir no serial monitor
+    //String vetor; // Para imprimir no serial monitor
     qtdSensores = 0;
     for (int n = 0; n <= 5; n++){
       if (sensores_conectados[n]) {
         qtdSensores = qtdSensores + 1;
-        sensortemp.requestTemperatures();
-        sensortemp.getAddress(Thermometer, n);
+        sensortemp.requestTemperatures(); // Adiciona pelo menos meio segundo de tempo de processamento, mas varia muito.
+        sensortemp.getAddress(Thermometer, n); // Pega o endereço de cada sensor conectado.
         Temps[n] = sensortemp.getTempC(Thermometer);
         doc["T"][n] = Temps[n];
       }   
@@ -118,14 +123,82 @@ void temperatura(){
         Temps[n] = -127;
         doc["T"][n] = Temps[n];
       }
-      vetor = vetor + sensores_conectados[n];
-      vetor = vetor + " | ";
+      //vetor = vetor + sensores_conectados[n];
+      //vetor = vetor + " | ";
     }
 
-    Serial.println(vetor);
-    Serial.print("qtde de sensores: ");
-    Serial.println(qtdSensores);
+    //Serial.println(vetor);
+    //Serial.print("qtde de sensores: ");
+    //Serial.println(qtdSensores);
 
+}
+
+void enviar_dados(void *pvParameters){
+
+  UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
+
+  for(;;){
+    float tempo_ant = millis();
+    
+    client.publish("Bateria", dados);
+
+    /* Obtém o High Water Mark da task atual.
+   Lembre-se: tal informação é obtida em words! */
+    uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+    Serial.print("High water mark (words) da task enviar_dados: ");
+    Serial.println(uxHighWaterMark);
+   
+    float tempo_dep = millis();
+    Serial.print("enviar dados, tempo: ");
+    tempo_ant = tempo_dep - tempo_ant;
+    Serial.println(tempo_ant);
+
+    vTaskDelay(tempo_task_enviar_dados/portTICK_PERIOD_MS);
+  }
+
+}
+
+void receber_dados(void *pvParameters){
+
+  for(;;){
+    float tempo_ant = millis();
+
+
+    if (!client.connected()) reconnect(); 
+    client.loop();
+
+    vTaskDelay(tempo_task_receber_dados/portTICK_PERIOD_MS);
+    float tempo_dep = millis();
+    Serial.print("Task receber_dados, tempo: ");
+    tempo_ant = tempo_dep - tempo_ant;
+    Serial.println(tempo_ant);
+  }
+}
+
+void ler_sensores(void *pvParameters){
+
+  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
+
+  for(;;){
+    float tempo_ant = millis();
+
+    indice_bateria();
+    temperatura();
+    serializeJson(doc, dados);
+
+    /* Obtém o High Water Mark da task atual.
+    Lembre-se: tal informação é obtida em words! */
+    //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+    //Serial.print("High water mark (words) da task ler sensores: ");
+    //Serial.println(uxHighWaterMark);
+    
+    float tempo_dep = millis();
+    //Serial.print("Task ler sensores, tempo: ");
+    tempo_ant = tempo_dep - tempo_ant;
+    //Serial.println(tempo_ant);
+
+    vTaskDelay(tempo_task_ler_sensores/portTICK_PERIOD_MS);
+  }
 }
 
 void setup(){
@@ -177,36 +250,60 @@ void setup(){
   client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT
   //////////////
 
+xTaskCreate(
+    enviar_dados,      // Função a ser chamada
+    "Enviar dados",    // Nome da tarefa
+    1000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,               // Parametro a ser passado
+   3,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    NULL               // Task handle
+    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+);
+
+xTaskCreate(
+    receber_dados,      // Função a ser chamada
+    "Receber dados",    // Nome da tarefa
+    1000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,               // Parametro a ser passado
+    2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    NULL               // Task handle
+    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+);
+
+xTaskCreate(
+    ler_sensores,      // Função a ser chamada
+    "Ler dados",    // Nome da tarefa
+    5000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,               // Parametro a ser passado
+    1,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    NULL               // Task handle
+    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+);
+
+
 }
 
 void loop() { // Print pin levels every 50ms
 
-  if (!client.connected()) reconnect(); 
-  client.loop();
-
-  indice_bateria();
-
-  serializeJson(doc, dados);
-
   ////////////////////////////////////////////////////////
-  unsigned long tempo = millis();
+  // unsigned long tempo = millis();
 
-  if ((tempo - prevMillis) >= delayLoop){
-    client.publish("Bateria", dados);
-    //Serial.println((tempo - prevMillis)); // tempo entre loops
-    prevMillis = tempo;
+  // if ((tempo - prevMillis) >= delayLoop){
+    
+  //   //Serial.println((tempo - prevMillis)); // tempo entre loops
+  //   prevMillis = tempo;
 
-    temperatura();
-    //interrupt.imprimir();
+    
+  //   //interrupt.imprimir();
 
-    for (int i = 0; i < 6; i++){
+  //   for (int i = 0; i < 6; i++){
 
-      Serial.print("Temperaturas: ");
-      Serial.print(Temps[i]);
-      Serial.print("C° | ");
-      Serial.println("");
-    }
-  }
+  //      Serial.print("Temperaturas: ");
+  //      Serial.print(Temps[i]);
+  //      Serial.print("C° | ");
+  //      Serial.println("");
+  //   }
+  // }
 ////////////////////////////////////////////////////////
 
 
