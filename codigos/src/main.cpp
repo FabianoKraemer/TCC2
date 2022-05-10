@@ -2,6 +2,7 @@
 #include <OneWire.h> // Protocolo da Dallas, usado para os NTCs digitais DS18B20
 #include <DallasTemperature.h> // Biblioteca do NTC digital DS18B20
 #include "HardwareSerial.h" //somente para a ESP32
+#include <PZEM004Tv30.h> // biblioteca do Wattímetro, já com a compatibilidade pra software serial ou hardware serial
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Interrupcoes interrupt(tempo_db_Pinos_temp);
@@ -11,13 +12,22 @@ const int oneWireBus = 15; //porta que os NTCs digitais estão conectados
 OneWire oneWire(oneWireBus); // Prepara uma instância oneWire para comunicar com qualquer outro dispositivo oneWire.
 DallasTemperature sensortemp(&oneWire); // Passa uma referência oneWire para a biblioteca DallasTemperature.
 
+// Criando objeto do wattímetro
+#define RX2 25
+#define TX2 33
+//PZEM004Tv30 pzem(&Serial2); //usa o Serial1 do hardwareserial, pinos instânciados no construtor, padrão, 3 RX e 1 TX
+
+HardwareSerial SerialController(2);
+
+PZEM004Tv30 pzem(&SerialController);
+
 
 // variable to hold device addresses
 DeviceAddress Thermometer;
 
-long tempo_task_enviar_dados = 3000;
+long tempo_task_enviar_dados = 5000;
 long tempo_task_receber_dados = 1000;
-long tempo_task_ler_sensores = 5000;
+long tempo_task_ler_sensores = 3000;
 
 
 void setup_wifi() {
@@ -91,7 +101,6 @@ void indice_bateria(){
   if (bateriaMax <= percentual_bateria) bateriaMax = percentual_bateria;
   if (bateriaMin >= percentual_bateria) bateriaMin = percentual_bateria;
 
-  doc["Bat"] = percentual_bateria;
   doc["bateriaMax"] = bateriaMax;
   doc["bateriaMin"] = bateriaMin;
 
@@ -108,16 +117,15 @@ void temperatura(){
     interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
     interrupt.retorna_vetor(sensores_conectados); // Verifica quais portas estão com algo conectado ou não. True para conectado, false para desconectado.
 
-    //String vetor; // Para imprimir no serial monitor
-    qtdSensores = 0;
+    sensortemp.requestTemperatures(); // Adiciona pelo menos meio segundo de tempo de processamento, mas varia muito.
+
     for (int n = 0; n <= 5; n++){
       if (sensores_conectados[n]) {
-        qtdSensores = qtdSensores + 1;
-        sensortemp.requestTemperatures(); // Adiciona pelo menos meio segundo de tempo de processamento, mas varia muito.
         sensortemp.getAddress(Thermometer, n); // Pega o endereço de cada sensor conectado.
         Temps[n] = sensortemp.getTempC(Thermometer);
         doc["T"][n] = Temps[n];
-      }   
+      }
+
       if (!sensores_conectados[n]) {
         //qtdSensores = qtdSensores - 1;
         Temps[n] = -127;
@@ -133,25 +141,94 @@ void temperatura(){
 
 }
 
+void pressao(){
+
+  P1 = 0;
+  int i = 0;
+  while (i < 50) {
+    P1 = P1 + analogRead(porta_P1);
+    i++;
+  }
+  P1 = P1 / 50; // Tira a média das 50 leituras.
+  doc["P1"] = P1;
+  P1 = (P1 * 0.1875) / 1000; // Obter tensão.
+  P1 = (P1 * 30 - 19.8) / 2.64; // fórmula obtida fazendo uma matriz com 0 bar a 30 bar e 0,66V a 3.3V. Valor do 21.8 na formula é 19.8, foi acrescentado 1 para correção das variações e ficar o mesmo valor do manômetro
+
+  P2 = 0;
+  i = 0;
+  while (i < 50) {
+    P2 = P2 + analogRead(porta_P2);;
+    i++;
+  }
+  P2 = P2 / 50; // Tira a média das 50 leituras.
+  doc["P2"] = P2;
+  P2 = (P2 * 0.1875) / 1000; // Obter tensão.
+  P2 = (P2 * 10 - 6.6) / 2.64; // Fórmula obtida fazendo uma matriz com 0 bar a 10 bar e 0,66V a 3.3V.
+
+  //pressaoAlta = pressaoAlta * 14.504; //convertendo pra psi
+
+}
+
+void wattimetro(){
+
+  V = pzem.voltage();
+  I = pzem.current();
+  W = pzem.power();
+  Wh = pzem.energy();
+  Freq = pzem.frequency();
+  FP = pzem.pf();
+  
+  Serial.println(V);
+  if (isnan(W)) SerialController.begin(9600,SERIAL_8N1,25,33);
+  
+  // Condição caso o wattímetro esteja desligado/problema de conexão, substituí o nan (not a number) por -1.
+  if (isnan(W)) W = -1;
+  if (isnan(V)) V = -1;
+  if (isnan(I)) I = -1;
+  if (isnan(FP)) FP = -1;
+  if (isnan(Wh)) Wh = -1;
+  if (isnan(Freq)) Freq = -1;
+
+  Serial.println(V);
+
+  doc["W"] = pzem.power(); // potência Watts
+  doc["V"] = pzem.voltage(); // tensão
+  doc["I"] = pzem.current(); // corrente
+  doc["FP"] = pzem.pf(); // fator potência
+  doc["Wh"] = pzem.energy(); // watt hora
+  doc["freq"] = pzem.frequency(); // frequência
+
+}
+
 void enviar_dados(void *pvParameters){
 
-  UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
+  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task.
+
+
 
   for(;;){
-    float tempo_ant = millis();
-    
-    client.publish("Bateria", dados);
+    float tempo_ant = millis(); 
+
+    // Se perder a conexão WiFi, tenta reconectar.
+    while (WiFi.status() != WL_CONNECTED) {}
+
+    // Se perder a conexão com o broker MQTT, tenta reconectar.
+    if (!client.connected()) reconnect();
+
+    client.publish("Bateria", dados); // Publica o JSON no tópico do broker MQTT.
+
+   // if(!(client.publish("Bateria", dados))) Serial.println("iih, não enviou pro MQTT");
 
     /* Obtém o High Water Mark da task atual.
    Lembre-se: tal informação é obtida em words! */
-    uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-    Serial.print("High water mark (words) da task enviar_dados: ");
-    Serial.println(uxHighWaterMark);
+    // uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+    // Serial.print("High water mark (words) da task enviar_dados: ");
+    // Serial.println(uxHighWaterMark);
    
-    float tempo_dep = millis();
-    Serial.print("enviar dados, tempo: ");
-    tempo_ant = tempo_dep - tempo_ant;
-    Serial.println(tempo_ant);
+    // float tempo_dep = millis();
+    // Serial.print("enviar dados, tempo: ");
+    // tempo_ant = tempo_dep - tempo_ant;
+    // Serial.println(tempo_ant);
 
     vTaskDelay(tempo_task_enviar_dados/portTICK_PERIOD_MS);
   }
@@ -177,18 +254,21 @@ void receber_dados(void *pvParameters){
 
 void ler_sensores(void *pvParameters){
 
-  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
+  UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
 
   for(;;){
     float tempo_ant = millis();
 
     indice_bateria();
     temperatura();
+    pressao();
+    wattimetro();
+
     serializeJson(doc, dados);
 
     /* Obtém o High Water Mark da task atual.
     Lembre-se: tal informação é obtida em words! */
-    //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+    uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
     //Serial.print("High water mark (words) da task ler sensores: ");
     //Serial.println(uxHighWaterMark);
     
@@ -205,10 +285,13 @@ void setup(){
 
   Serial.begin(9600); // Inicialisa serial port, apenas para print no serial monitor para debug
 
-  pinMode(16, INPUT);
-  pinMode(17, INPUT);
+  pinMode(25, INPUT);
+  pinMode(33, INPUT);
+
   pinMode(32, INPUT); // GPIO bateria
 
+  SerialController.begin(9600,SERIAL_8N1,25,33); 
+  //Serial2.begin(9600,SERIAL_8N1,25,33);
   // Declaração das variáveis no documeto JSON
   //doc["T1"] = Temp1; // T1 - Sensor do pino 1. No vetor está na posição 0. Está no GPIO 16.
   //doc["T2"] = Temp2; // T2 - Sensor do pino 2. No vetor está na posição 1. Está no GPIO 17.
@@ -248,27 +331,32 @@ void setup(){
   client.setBufferSize(MSG_BUFFER_SIZE); // Setar o tamanho do buffer do payload mqtt
   client.setServer(mqtt_server, 1883);  // Seta o servidor MQTT e a porta (porta padrão) 
   client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT
+  if (!client.connected()) {
+    reconnect();
+  }
   //////////////
+
+//pzem.resetEnergy();
 
 xTaskCreate(
     enviar_dados,      // Função a ser chamada
     "Enviar dados",    // Nome da tarefa
-    1000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-    NULL,               // Parametro a ser passado
-   3,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    5000,              // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,              // Parametro a ser passado
+    3,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     NULL               // Task handle
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
 );
 
-xTaskCreate(
-    receber_dados,      // Função a ser chamada
-    "Receber dados",    // Nome da tarefa
-    1000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-    NULL,               // Parametro a ser passado
-    2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    NULL               // Task handle
-    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
-);
+// xTaskCreate(
+//     receber_dados,      // Função a ser chamada
+//     "Receber dados",    // Nome da tarefa
+//     1000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+//     NULL,               // Parametro a ser passado
+//     2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//     NULL               // Task handle
+//     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+// );
 
 xTaskCreate(
     ler_sensores,      // Função a ser chamada
@@ -280,31 +368,11 @@ xTaskCreate(
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
 );
 
+    Serial.printf("Internal Total heap %d, internal Free Heap %d\n", ESP.getHeapSize(), ESP.getFreeHeap());
+    Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+    Serial.printf("ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
+    Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
 
 }
 
-void loop() { // Print pin levels every 50ms
-
-  ////////////////////////////////////////////////////////
-  // unsigned long tempo = millis();
-
-  // if ((tempo - prevMillis) >= delayLoop){
-    
-  //   //Serial.println((tempo - prevMillis)); // tempo entre loops
-  //   prevMillis = tempo;
-
-    
-  //   //interrupt.imprimir();
-
-  //   for (int i = 0; i < 6; i++){
-
-  //      Serial.print("Temperaturas: ");
-  //      Serial.print(Temps[i]);
-  //      Serial.print("C° | ");
-  //      Serial.println("");
-  //   }
-  // }
-////////////////////////////////////////////////////////
-
-
-}
+void loop() {}

@@ -18,7 +18,7 @@ WiFiClient WifiClient;
 //WifiClient.config(local_ip,gateway, subnet);
 PubSubClient client(WifiClient); // Criação do objeto MQTT
 unsigned long tempoMsg = 0;
-#define MSG_BUFFER_SIZE	(1000) // Declaração do tamanho do buffer da mensagem MQTT
+#define MSG_BUFFER_SIZE	(2000) // Declaração do tamanho do buffer da mensagem MQTT
 char msg[MSG_BUFFER_SIZE]; // Criação do array char da mensagem MQTT
 
 //testando JSON
@@ -51,9 +51,12 @@ static float FP = -1;  // Fator de Potência
 static float Freq = -1;// Frequência da rede
 static float Wh = -1;  // Watt hora
 
-// Variáveis dos sensores de pressão. Valores iniciados com negativo para sinalizar não uso/conexão do Wattímetro
+// Variáveis dos sensores de pressão. Valores iniciados com negativo para sinalizar não uso/conexão dos sensores de pressão
 static float P1 = -1;
 static float P2 = -2;
+static unsigned int porta_P1 = 35;
+static unsigned int porta_P2 = 34;
+
 
 // Indicador de percentual de carga da bateria
 float percentual_bateria = 0;
