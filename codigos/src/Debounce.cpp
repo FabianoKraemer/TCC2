@@ -20,7 +20,6 @@ bool Debounce::debounce(unsigned long tempo_db)
     unsigned long dt = now - _last;
     _last = now;
     if(dt >= tempo_db)
-      Serial.println("ciclo debounce");
         return true;
     return false;
 }

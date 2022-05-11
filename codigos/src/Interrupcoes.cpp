@@ -6,12 +6,6 @@
   unsigned long tempo_db = 300;
   Debounce _deb1(tempo_db); // Debouncer para pinos sensores de temperatura
 
-//  Debounce _deb2(tempo_debounce); // Debouncer para pino 2 sensor de temperatura
-//  Debounce _deb3(tempo_debounce); // Debouncer para pino 3 sensor de temperatura
-//  Debounce _deb4(tempo_debounce); // Debouncer para pino 4 sensor de temperatura
-//  Debounce _deb5(tempo_debounce); // Debouncer para pino 5 sensor de temperatura
-//  Debounce _deb6(tempo_debounce); // Debouncer para pino 6 sensor de temperatura
-
   volatile static bool teste_vetor[6];
 
   portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
@@ -114,7 +108,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_6() {
   }
 }
 
-// Ativa todas as interrupções dos pinos dos sensores de temperatura DS18B20
+// Ativa todas as interrupções dos pinos dos sensores de temperatura DS18B20.
 void Interrupcoes::ativar_interrupcoes(){
 
   attachInterrupt(digitalPinToInterrupt(DS18B20_1), interrupcao_DS18B20_1, CHANGE);
@@ -145,30 +139,5 @@ void Interrupcoes::atualizar_estado_portas(){
 
   if (digitalRead(DS18B20_6) == 0)teste_vetor[5] = true;
   else if (digitalRead(DS18B20_6) == 1)teste_vetor[5] = false;
-
-}
-
-void Interrupcoes::imprimir(){
-
-  String vetor; 
-
-  for (int n = 0; n <= 5; n++){
-    vetor = vetor + teste_vetor[n];
-    vetor = vetor + " | ";
-  }
-
-  Serial.println(vetor);
-
-  // Serial.print(teste_vetor[0]);
-  // Serial.print(" | ");
-  //   Serial.print(teste_vetor[1]);
-  // Serial.print(" | ");
-  //   Serial.print(teste_vetor[2]);
-  // Serial.print(" | ");
-  //   Serial.print(teste_vetor[3]);
-  // Serial.print(" | ");
-  //   Serial.print(teste_vetor[4]);
-  // Serial.print(" | ");
-  //   Serial.println(teste_vetor[5]);
 
 }

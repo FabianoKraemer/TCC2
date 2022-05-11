@@ -33,17 +33,15 @@ public:
     // Interrupcoes(unsigned long tempo_db_);  // Construtor
     ~Interrupcoes(); // Destrutor
 
-    static void tempo_debounce(unsigned long teste); // Setar o tempo de debouncer
+    static void tempo_debounce(unsigned long teste); // Setar o tempo de debouncer.
 
-    static void ativar_interrupcoes(); // Ativa todas as interrupções dos pinos P2 dos sensores de temperatura DS18B20
+    static void ativar_interrupcoes(); // Ativa todas as interrupções dos pinos P2 dos sensores de temperatura DS18B20.
 
-    void imprimir(); // imprimi o estado das 6 portas dos DS18B20
+    static void atualizar_estado_portas(); // Le o estado das 6 portas e atualiza o vetor booleano do estado delas, para verificar se tem algo conectada.
 
-    static void atualizar_estado_portas(); // le o estado das 6 portas e atualiza o vetor booleano do estado delas, para verificar se tem algo conectada.
+    void retorna_vetor(volatile bool estado_pinos[6]); // Retorna um vetor booleano com a informação de quais pinos estão com algo conectado.
 
-    void retorna_vetor(volatile bool estado_pinos[6]);
-
-    //volatile static bool teste_vetor[6]; // Variavel em vetor booleano para identificar quais portas dos pinos dos sensores de temperatura estão com um sensor conectado
+    //volatile static bool teste_vetor[6]; // Variavel em vetor booleano para identificar quais portas dos pinos dos sensores de temperatura estão com um sensor conectado.
 
 };
 

@@ -1,5 +1,9 @@
 # TCC2
 
+Versão 0.55
+
+- Task receber_comandos finalizada. Comandos pela UI do Node-Red sendo recebidos.
+
 Versão 0.54
 
 - Wattímetro funcionando, para isso foi necessário criar um objeto do hardwareserial, e indicar as portas utilizadas: RX 25 e TX33. As porta foram indicadas na inicialização begin. Utilizar o Serial2 mesmo modificando o hardwareserial.cpp, colocando outras portas (modificando as nativas, RX 16 e TX 17) não funcionou. Os GPIOs originais (RX 3 e TX1), do UART0, não podem ser utilizados se estiver usando a USB da ESP.

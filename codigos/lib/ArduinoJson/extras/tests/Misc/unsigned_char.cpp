@@ -30,7 +30,7 @@ TEST_CASE("unsigned char[]") {
 
   SECTION("serializeMsgPack(unsigned char[])") {
     unsigned char buffer[32];
-    StaticJsonDocument<JSON_OBJECT_SIZE(2)> doc;
+    StaticJsonDocument<JSON_OBJECT_SIZE(2)> JSON_envia_dados;
     doc["hello"] = "world";
 
     size_t n = serializeMsgPack(doc, buffer);
