@@ -1,5 +1,9 @@
 # TCC2
 
+Versão 0.56
+
+- Adicionado WifiManager. Testes sendo realizados.
+
 Versão 0.55
 
 - Task receber_comandos finalizada. Comandos pela UI do Node-Red sendo recebidos.

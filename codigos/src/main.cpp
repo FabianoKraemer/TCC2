@@ -1,8 +1,48 @@
 #include "Includes.h" // Todos os includes necessários para o projeto
+
+// #if defined(ESP8266)
+// #include <ESP8266WiFi.h>  //ESP8266 Core WiFi Library         
+// #else
+// #include <WiFi.h>      //ESP32 Core WiFi Library    
+// #endif
+//
+
+#include <WebServer.h> //Local WebServer used to serve the configuration portal ( https://github.com/zhouhan0126/WebServer-esp32 )
+
+
+#include <DNSServer.h> //Local DNS Server used for redirecting all requests to the configuration portal ( https://github.com/zhouhan0126/DNSServer---esp32 )
+#include <WiFiManager.h>
 // Variáveis globais utilizadas estão no "Variaveis.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Interrupcoes interrupt(tempo_db_Pinos_temp);
+
+WiFiManager wifiManager;
+bool conectou_wifi;
+
+void teste_WifiManager(){
+
+  Serial.println("teste Wifi Manager");
+
+ //////////////////////////////////////////////////////////
+  // Teste Wifi Manager ///
+  /////////////// 
+
+  
+
+    if (!conectou_wifi){
+      Serial.println("dentro do if wifi process");
+      
+      
+    }
+
+    conectou_wifi = wifiManager.process(); // Ativa a página do portal, pra verificar o wifi, desconectar, update do firmware, reset da ESP    
+    //wifiManager.startConfigPortal();
+    wifiManager.startWebPortal(); // Inicia o portal de configuração e demais opções. Precisa do process para funcionar
+    
+    delay(600);
+
+}
 
 // Conectar em uma rede WiFi préviamente definida
 void setup_wifi() {
@@ -237,6 +277,7 @@ void ler_sensores(void *pvParameters){
   }
 }
 
+
 void setup(){
 
   Serial.begin(9600); // Inicialisa serial port, apenas para print no serial monitor para debug
@@ -273,14 +314,30 @@ void setup(){
   sensortemp.begin(); // Inicialização dos DS18B20.
 
   //////////////
-  setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager.
+  //setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager.
+  //wifiManager.resetSettings();
+
+  wifiManager.setConfigPortalBlocking(false); // Não deixa que o WiFiManager bloqueie a execução enquanto não estiver conectado em nada.
+
+  conectou_wifi = wifiManager.autoConnect("ESP_AP", "testeesp"); 
+  wifiManager.startWebPortal();
+
+  teste_WifiManager();
+
+
   client.setBufferSize(MSG_BUFFER_SIZE); // Setar o tamanho do buffer do payload mqtt.
+  Serial.println("1");
   client.setServer(mqtt_server, 1883);  // Seta o servidor MQTT (Broker) e a porta (porta padrão).
+  Serial.println("2");
   client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT.
+  Serial.println("3");
   if (!client.connected()) { // Conecta no broker MQTT.
+  Serial.println("4");
     reconnect();
+    Serial.println("5");
   }
   client.subscribe("comandosTCC"); // Dar subscribe no tópico que envia os comandos do NodeRed para cá.
+  Serial.println("6");
   //////////////
 
   pzem.resetEnergy(); // Reseta as informações salvas internamente no PZEM, como o Wh.
@@ -295,15 +352,15 @@ void setup(){
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
   );
 
-xTaskCreate(
-    receber_dados,      // Função a ser chamada
-    "Receber dados",    // Nome da tarefa
-    2000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-    NULL,               // Parametro a ser passado
-    2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    NULL               // Task handle
-    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
-);
+// xTaskCreate(
+//     receber_comandos,      // Função a ser chamada
+//     "Receber comandos",    // Nome da tarefa
+//     2000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+//     NULL,               // Parametro a ser passado
+//     2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//     NULL               // Task handle
+//     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+// );
 
   xTaskCreate(
     ler_sensores,      // Função a ser chamada
@@ -322,4 +379,9 @@ xTaskCreate(
 
 }
 
-void loop() {}
+void loop() {
+
+  teste_WifiManager();
+  
+
+}
