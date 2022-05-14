@@ -8,7 +8,7 @@
 //
 
 #include <WebServer.h> //Local WebServer used to serve the configuration portal ( https://github.com/zhouhan0126/WebServer-esp32 )
-
+WebServer server(80);
 
 #include <DNSServer.h> //Local DNS Server used for redirecting all requests to the configuration portal ( https://github.com/zhouhan0126/DNSServer---esp32 )
 #include <WiFiManager.h>
@@ -20,42 +20,19 @@ Interrupcoes interrupt(tempo_db_Pinos_temp);
 WiFiManager wifiManager;
 bool conectou_wifi;
 
-void teste_WifiManager(){
+void wifi(){
 
   Serial.println("teste Wifi Manager");
 
  //////////////////////////////////////////////////////////
   // Teste Wifi Manager ///
   /////////////// 
+    wifiManager.startConfigPortal("ESP_AP", "testeesp"); // Caso perca a conexão, abilita novamente o AP pra ser conectado pelo celular e configurar/logar em nova rede WiFi.
+    wifiManager.process(); // Ativa a página do portal, pra verificar o wifi, desconectar, update do firmware, reset da ESP  
 
-  
+    //wifiManager.erase();
+    //wifiManager.resetSettings();
 
-    if (!conectou_wifi){
-      Serial.println("dentro do if wifi process");
-      
-      
-    }
-
-    conectou_wifi = wifiManager.process(); // Ativa a página do portal, pra verificar o wifi, desconectar, update do firmware, reset da ESP    
-    //wifiManager.startConfigPortal();
-    wifiManager.startWebPortal(); // Inicia o portal de configuração e demais opções. Precisa do process para funcionar
-    
-    delay(600);
-
-}
-
-// Conectar em uma rede WiFi préviamente definida
-void setup_wifi() {
-
-  delay(10);
-  // iniciar conexão wifi
-  WiFi.mode(WIFI_STA);
-  //WiFi.config(local_ip,gateway, subnet);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
 }
 
 // Reconecta no broker MQTT.
@@ -201,6 +178,37 @@ void wattimetro(){
 
 }
 
+void conexoes_wireless(void *pvParameters){
+
+  UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task.
+
+  for (;;){
+    float tempo_ant = millis();
+
+    // Se perder a conexão WiFi, tenta reconectar.
+    if (WiFi.status() != WL_CONNECTED && ativar_wifi == true){
+      Serial.println("desconectado");
+      wifi();
+    }
+    
+    if (WiFi.status() == WL_CONNECTED){
+      Serial.println("CONECTADO");
+      //wifiManager.stopConfigPortal();
+      wifiManager.stopWebPortal();    
+    }
+
+
+    /* Obtém o High Water Mark da task atual.
+    Lembre-se: tal informação é obtida em words! */
+    uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+
+    float tempo_dep = millis();
+    tempo_ant = tempo_dep - tempo_ant;
+
+    vTaskDelay(tempo_task_conexoes_wireless / portTICK_PERIOD_MS);
+  }
+}
+
 void enviar_dados(void *pvParameters){
 
   UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task.
@@ -234,6 +242,7 @@ void enviar_dados(void *pvParameters){
 void receber_dados(void *pvParameters){
 
   UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
+  //wifiManager.resetSettings();
 
   for(;;){
     float tempo_ant = millis();
@@ -277,7 +286,6 @@ void ler_sensores(void *pvParameters){
   }
 }
 
-
 void setup(){
 
   Serial.begin(9600); // Inicialisa serial port, apenas para print no serial monitor para debug
@@ -286,7 +294,7 @@ void setup(){
   pinMode(33, INPUT); // TX do Pzem
   pinMode(32, INPUT); // GPIO bateria
 
-  SerialController.begin(9600,SERIAL_8N1,25,33); 
+  SerialController.begin(9600,SERIAL_8N1,25,33); // Ativando o hardware serial para conexão com o Wattimetro PZEM
   //Serial2.begin(9600,SERIAL_8N1,25,33);
 
   // Declaração das variáveis no documeto JSON
@@ -311,19 +319,17 @@ void setup(){
   interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
   interrupt.ativar_interrupcoes(); // Ativa as interrupções das portas dos sensores de temperatura.
 
-  sensortemp.begin(); // Inicialização dos DS18B20.
+  //sensortemp.begin(); // Inicialização dos DS18B20.
 
   //////////////
   //setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager.
-  //wifiManager.resetSettings();
 
   wifiManager.setConfigPortalBlocking(false); // Não deixa que o WiFiManager bloqueie a execução enquanto não estiver conectado em nada.
+  wifiManager.setWiFiAutoReconnect(true); // Permite a reconexão em rede WiFi, caso perca a conexão momentaneamente.
+  wifiManager.setDebugOutput(false); // Desabilita as saídas 
 
-  conectou_wifi = wifiManager.autoConnect("ESP_AP", "testeesp"); 
-  wifiManager.startWebPortal();
-
-  teste_WifiManager();
-
+  wifiManager.autoConnect("ESP_AP", "testeesp"); 
+  //wifiManager.startWebPortal();
 
   client.setBufferSize(MSG_BUFFER_SIZE); // Setar o tamanho do buffer do payload mqtt.
   Serial.println("1");
@@ -340,31 +346,41 @@ void setup(){
   Serial.println("6");
   //////////////
 
-  pzem.resetEnergy(); // Reseta as informações salvas internamente no PZEM, como o Wh.
+  //pzem.resetEnergy(); // Reseta as informações salvas internamente no PZEM, como o Wh.
 
-  xTaskCreate(
-    enviar_dados,      // Função a ser chamada
-    "Enviar dados",    // Nome da tarefa
-    5000,              // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-    NULL,              // Parametro a ser passado
-    3,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    NULL               // Task handle
-    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
-  );
+  // xTaskCreate(
+  //   enviar_dados,      // Função a ser chamada
+  //   "Enviar dados",    // Nome da tarefa
+  //   5000,              // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+  //   NULL,              // Parametro a ser passado
+  //   4,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+  //   NULL               // Task handle
+  //   //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+  // );
 
 // xTaskCreate(
 //     receber_comandos,      // Função a ser chamada
 //     "Receber comandos",    // Nome da tarefa
 //     2000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
 //     NULL,               // Parametro a ser passado
-//     2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//     3,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
 //     NULL               // Task handle
 //     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
 // );
 
-  xTaskCreate(
-    ler_sensores,      // Função a ser chamada
-    "Ler dados",    // Nome da tarefa
+  // xTaskCreate(
+  //   ler_sensores,      // Função a ser chamada
+  //   "Ler dados",    // Nome da tarefa
+  //   5000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+  //   NULL,               // Parametro a ser passado
+  //   2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+  //   NULL               // Task handle
+  //   //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+  // );
+
+    xTaskCreate(
+    conexoes_wireless,      // Função a ser chamada
+    "Conexoes wireless",    // Nome da tarefa
     5000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
     NULL,               // Parametro a ser passado
     1,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
@@ -372,16 +388,26 @@ void setup(){
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
   );
 
-    Serial.printf("Internal Total heap %d, internal Free Heap %d\n", ESP.getHeapSize(), ESP.getFreeHeap());
-    Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
-    Serial.printf("ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
-    Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
+  //  Serial.printf("Internal Total heap %d, internal Free Heap %d\n", ESP.getHeapSize(), ESP.getFreeHeap());
+  //  Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
+  //  Serial.printf("ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
+  //  Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
 
 }
 
 void loop() {
-
-  teste_WifiManager();
   
+    //  Serial.println("Dados do wifi:");
+    // Serial.print("remoteIP: ");
+    // Serial.println(WifiClient.remoteIP());
+    // //dados_json["remoteIP"] = espClient.remoteIP(); // json não aceita tipo IPADDRESS
+    
+    // //Serial.print("WiFI remote IP: ");
+    // //Serial.println(WiFi.remoteIP());
+
+    // Serial.print("remotePort: ");
+    // Serial.println(WifiClient.remotePort());
+    // // Serial.print("WiFI remote port: ");
+    // // Serial.println(WiFi.remotePort());
 
 }

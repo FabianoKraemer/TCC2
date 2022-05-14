@@ -2,9 +2,10 @@
 #define VARIAVEIS_h__
 
 // Dados pra conectar no wifi e no server mqtt
-const char* ssid = "VIVOFIBRA-1650";
-const char* password = "6343CC203B";
+//const char* ssid = "xxxxxxxxxx";
+//const char* password = "xxxxxxxxxx";
 const char* mqtt_server = "projetoifsc.duckdns.org";
+static bool ativar_wifi = true;
 //IPAddress raspberry(192, 168, 15, 105);
 //IPAddress local_ip(192, 168, 15, 150);
 //IPAddress gateway(192, 168, 15, 1);
@@ -26,9 +27,10 @@ DynamicJsonDocument JSON_recebe_comandos(100);
 char comandos_recebidos[100]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
 
 // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem
-static long tempo_task_enviar_dados = 5000; // 5000 milisegundos por padrão
-static long tempo_task_receber_dados = 1000;
-static long tempo_task_ler_sensores = 3000;
+static long tempo_task_enviar_dados = 5000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 5000 milisegundos por padrão.
+static long tempo_task_receber_dados = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
+static long tempo_task_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
+static long tempo_task_conexoes_wireless = 500; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
 
 // Variáveis sensores de temperatura. DS18B20 range: -55°C a +125°C. Valores iniciados com -127 pois é o valor padrão da biblioteca caso sensor esteja desconectado.
 static float Temp1 = -127;
