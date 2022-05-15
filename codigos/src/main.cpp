@@ -1,24 +1,129 @@
 #include "Includes.h" // Todos os includes necessários para o projeto
+//#include "OTA.h"
 
-// #if defined(ESP8266)
-// #include <ESP8266WiFi.h>  //ESP8266 Core WiFi Library         
-// #else
-// #include <WiFi.h>      //ESP32 Core WiFi Library    
-// #endif
-//
+//WebServer server(80);
 
-#include <WebServer.h> //Local WebServer used to serve the configuration portal ( https://github.com/zhouhan0126/WebServer-esp32 )
-WebServer server(80);
 
-#include <DNSServer.h> //Local DNS Server used for redirecting all requests to the configuration portal ( https://github.com/zhouhan0126/DNSServer---esp32 )
-#include <WiFiManager.h>
 // Variáveis globais utilizadas estão no "Variaveis.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Interrupcoes interrupt(tempo_db_Pinos_temp);
+Interrupcoes interrupt(tempo_db_Pinos_temp); // Objeto das interrupções dos GPIOs dos sensores de temperatura.
 
-WiFiManager wifiManager;
-bool conectou_wifi;
+void atualizacao_OTA(){
+
+  if (WiFi.status() == WL_CONNECTED){ // Só entra na condição se o WiFi estiver conectado a uma rede.
+  
+    // Atende uma solicitação para a raiz e devolve a página 'verifica'.
+    //
+    server.on("/", HTTP_GET, [](){ // Atende uma solicitação para a raiz   
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/html", verifica);
+    });
+
+    // Atende uma solicitação para a página avalia
+    server.on("/avalia", HTTP_POST, [] (){
+       Serial.println("Em server.on /avalia: args= " + String(server.arg("autorizacao"))); //somente para debug
+
+      if (server.arg("autorizacao") != "projetoIFSC"){// confere se o dado de autorização atende a avaliação
+      
+        // Se não atende, serve a página indicando uma falha
+        server.sendHeader("Connection", "close");
+        server.send(200, "text/html", Resultado_Falha);
+        //ESP.restart();
+      }
+      else{      
+        // Se atende, solicita a página de índice do servidor e sinaliza que o OTA está autorizado.
+        OTA_AUTORIZADO = true;
+        server.sendHeader("Connection", "close");
+        server.send(200, "text/html", serverIndex);
+      }
+    });
+
+    // Serve a página de indice do servidor para seleção do arquivo.
+    server.on("/serverIndex", HTTP_GET, [](){
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/html", serverIndex);
+    });
+
+    // Tenta iniciar a atualização . . .
+    server.on("/update", HTTP_POST, [](){
+      // Verifica se a autorização é false.
+      // Se for falsa, serve a página de erro e cancela o processo.
+      if (OTA_AUTORIZADO == false){
+        server.sendHeader("Connection", "close");
+        server.send(200, "text/html", Resultado_Falha);
+        return;
+      }
+      // Serve uma página final que depende do resultado da atualização.
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/html", (Update.hasError()) ? Resultado_Falha : Resultado_Ok);
+      delay(1000);
+      ESP.restart();
+    }, [](){
+      //Mas estiver autorizado, inicia a atualização
+      HTTPUpload& upload = server.upload();
+      if (upload.status == UPLOAD_FILE_START){
+        Serial.setDebugOutput(true);
+        Serial.printf("Atualizando: %s\n", upload.filename.c_str());
+        if (!Update.begin()){
+          //se a atualização não iniciar, envia para serial mensagem de erro.
+          Update.printError(Serial);
+        }
+      }
+      else if (upload.status == UPLOAD_FILE_WRITE){
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize){
+          //se não conseguiu escrever o arquivo, envia erro para serial
+          Update.printError(Serial);
+        }
+      }
+      else if (upload.status == UPLOAD_FILE_END){
+        if (Update.end(true)){
+          //se finalizou a atualização, envia mensagem para a serial informando
+          Serial.printf("Atualização bem sucedida! %u\nReiniciando...\n", upload.totalSize);
+        }
+        else{
+          //se não finalizou a atualização, envia o erro para a serial.
+          Update.printError(Serial);
+        }
+        Serial.setDebugOutput(false);
+      }
+      else{
+        // se não conseguiu identificar a falha no processo, envia uma mensagem para a serial
+        Serial.printf("Atualização falhou inesperadamente! (possivelmente a conexão foi perdida.): status=%d\n", upload.status);
+      }
+    });
+
+    server.begin(); // inicia o servidor
+
+    Serial.println(INFOS); //envia as informações armazenadas em INFOS, para debug
+
+    // Envia ara a serial o IP atual do ESP
+    Serial.print("Servidor em: ");
+    Serial.println( WiFi.localIP().toString() + ":" + PORTA);
+
+    /////////////////////////////////////////////////////////
+    // Serial.print("SubnetMask: ");
+    // Serial.println( WiFi.subnetMask().toString());
+    //     Serial.print("gatewayIP: ");
+    // Serial.println( WiFi.gatewayIP().toString());
+    //     Serial.print("dnsIP: ");
+    // Serial.println( WiFi.dnsIP().toString());
+    //     Serial.print("broadcastIP: ");
+    // Serial.println( WiFi.broadcastIP().toString());
+    //       Serial.print("networkID: ");
+    // Serial.println( WiFi.networkID().toString());
+    //           Serial.print("subnetCIDR: ");
+    // Serial.println( WiFi.subnetCIDR());
+    //           Serial.print("RSSI: ");
+    // Serial.println( WiFi.RSSI());
+
+
+  }
+  else{
+    // Avisa se não conseguir conectar no WiFi
+    Serial.println("Falha ao conectar ao WiFi.");
+  }
+}
 
 void wifi(){
 
@@ -194,7 +299,9 @@ void conexoes_wireless(void *pvParameters){
     if (WiFi.status() == WL_CONNECTED){
       Serial.println("CONECTADO");
       //wifiManager.stopConfigPortal();
-      wifiManager.stopWebPortal();    
+      //wifiManager.stopWebPortal();
+      //atualizacao_OTA(); 
+      server.handleClient(); // Escutar a porta do webserver para atualização via OTA.
     }
 
 
@@ -323,6 +430,9 @@ void setup(){
 
   //////////////
   //setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager.
+  //wifiManager.erase();
+  //wifiManager.resetSettings();
+  
 
   wifiManager.setConfigPortalBlocking(false); // Não deixa que o WiFiManager bloqueie a execução enquanto não estiver conectado em nada.
   wifiManager.setWiFiAutoReconnect(true); // Permite a reconexão em rede WiFi, caso perca a conexão momentaneamente.
@@ -330,6 +440,8 @@ void setup(){
 
   wifiManager.autoConnect("ESP_AP", "testeesp"); 
   //wifiManager.startWebPortal();
+
+  if (WiFi.status() == WL_CONNECTED) atualizacao_OTA(); // Prepara a ESP como webserver para ser conectada e atualizar via OTA.
 
   client.setBufferSize(MSG_BUFFER_SIZE); // Setar o tamanho do buffer do payload mqtt.
   Serial.println("1");
@@ -348,15 +460,15 @@ void setup(){
 
   //pzem.resetEnergy(); // Reseta as informações salvas internamente no PZEM, como o Wh.
 
-  // xTaskCreate(
-  //   enviar_dados,      // Função a ser chamada
-  //   "Enviar dados",    // Nome da tarefa
-  //   5000,              // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-  //   NULL,              // Parametro a ser passado
-  //   4,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-  //   NULL               // Task handle
-  //   //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
-  // );
+  xTaskCreate(
+    enviar_dados,      // Função a ser chamada
+    "Enviar dados",    // Nome da tarefa
+    5000,              // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,              // Parametro a ser passado
+    4,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    NULL               // Task handle
+    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+  );
 
 // xTaskCreate(
 //     receber_comandos,      // Função a ser chamada
@@ -368,15 +480,15 @@ void setup(){
 //     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
 // );
 
-  // xTaskCreate(
-  //   ler_sensores,      // Função a ser chamada
-  //   "Ler dados",    // Nome da tarefa
-  //   5000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-  //   NULL,               // Parametro a ser passado
-  //   2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-  //   NULL               // Task handle
-  //   //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
-  // );
+  xTaskCreate(
+    ler_sensores,      // Função a ser chamada
+    "Ler dados",    // Nome da tarefa
+    5000,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,               // Parametro a ser passado
+    2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    NULL               // Task handle
+    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+  );
 
     xTaskCreate(
     conexoes_wireless,      // Função a ser chamada
@@ -397,6 +509,9 @@ void setup(){
 
 void loop() {
   
+    Serial.print("remoteIP: ");
+    Serial.println(WifiClient.remoteIP());
+    delay(2000);
     //  Serial.println("Dados do wifi:");
     // Serial.print("remoteIP: ");
     // Serial.println(WifiClient.remoteIP());

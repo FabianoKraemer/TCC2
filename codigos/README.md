@@ -1,5 +1,9 @@
 # TCC2
 
+Versão 0.58
+
+- Adicionado OTA.
+
 Versão 0.57
 
 - WifiManager ok, funcionando. Ativa AP e configuração de cadastro em rede WiFi no 192.168.4.1 caso não consiga se conectar a uma rede. Com conecção WiFi na internet ativa, desativa o AP e o StarPortal.

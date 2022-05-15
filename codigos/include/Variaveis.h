@@ -13,6 +13,7 @@ static bool ativar_wifi = true;
 unsigned long prevMillis = 0;
 
 WiFiClient WifiClient;
+WiFiManager wifiManager;
 //WifiClient.config(local_ip,gateway, subnet);
 PubSubClient client(WifiClient); // Criação do objeto MQTT
 unsigned long tempoMsg = 0;
@@ -31,6 +32,8 @@ static long tempo_task_enviar_dados = 5000; // Tempo do ticket da task que envia
 static long tempo_task_receber_dados = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
 static long tempo_task_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
 static long tempo_task_conexoes_wireless = 500; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
+
+
 
 // Variáveis sensores de temperatura. DS18B20 range: -55°C a +125°C. Valores iniciados com -127 pois é o valor padrão da biblioteca caso sensor esteja desconectado.
 static float Temp1 = -127;
@@ -80,6 +83,34 @@ const int porta_bateria = 32;
 unsigned long tempo_db_Pinos_temp = 300; // Tempo do debouncer das portas dos sensores de temperatura, em milisegundos.
 
 unsigned int tipo_gas = 0; // Tipo de gás escolhido pelo operador. 
+
+
+///////////////// Variáveis OTA //////////////////////////
+
+static const uint32_t PORTA = 5000; // A porta que será utilizada (padrão 80).
+// Inicia o servidor na porta selecionada
+// Configurado para escutar na porta 5000, ao invés da 80 padrão.
+static WebServer server(PORTA);
+
+// Algumas informações que podem ser interessantes
+const uint32_t chipID = (uint32_t)(ESP.getEfuseMac() >> 32); // Um ID exclusivo do Chip.
+const String CHIP_ID = "<p> Chip ID: " + String(chipID) + "</p>"; // Montado para ser usado no HTML.
+const String VERSION = "<p> Versão: 5.8 </p>"; // Exemplo de um controle de versão.
+
+// // Informações interessantes agrupadas.
+const String INFOS = VERSION + CHIP_ID;
+
+// // Sinalizador de autorização do OTA.
+boolean OTA_AUTORIZADO = false;
+
+
+
+// // Páginas HTML utilizadas no procedimento OTA.
+String verifica = "<!DOCTYPE html><html><head><title>ESP32 webOTA</title><meta charset='UTF-8'></head><body><h1>ESP32 webOTA</h1><h2>Digite a chave de verificação.<p>Clique em ok para continuar. . .</p></h2>" + INFOS + "<form method='POST' action='/avalia 'enctype='multipart/form-data'> <p><label>Autorização: </label><input type='text' name='autorizacao'></p><input type='submit' value='Ok'></form></body></html>";
+String serverIndex = "<!DOCTYPE html><html><head><title>ESP32 webOTA</title><meta charset='UTF-8'></head><body><h1>ESP32 webOTA</h1><h2>Selecione o arquivo para a atualização e clique em atualizar.</h2>" + INFOS + "<form method='POST' action='/update' enctype='multipart/form-data'><p><input type='file' name='update'></p><p><input type='submit' value='Atualizar'></p></form></body></html>";
+String Resultado_Ok = "<!DOCTYPE html><html><head><title>ESP32 webOTA</title><meta charset='UTF-8'></head><body><h1>ESP32 webOTA</h1><h2>Atualização bem sucedida!</h2>" + INFOS + "</body></html>";
+String Resultado_Falha = "<!DOCTYPE html><html><head><title>ESP32 webOTA</title><meta charset='UTF-8'></head><body><h1>ESP32 webOTA</h1><h2>Falha durante a atualização. A versão anterior será recarregado.</h2>" + INFOS + "</body></html>";
+
 
 
 #endif //VARIAVEIS_h__
