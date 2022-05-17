@@ -1,5 +1,9 @@
 # TCC2
 
+Versão 0.59
+
+- Adicionado Task de "debug" via MQTT, analisando tempos de execução das Task, memória ocupadas por elas e quantidade livre de RAM total.
+
 Versão 0.58
 
 - Adicionado OTA.

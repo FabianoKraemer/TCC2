@@ -17,23 +17,27 @@ WiFiManager wifiManager;
 //WifiClient.config(local_ip,gateway, subnet);
 PubSubClient client(WifiClient); // Criação do objeto MQTT
 unsigned long tempoMsg = 0;
-#define MSG_BUFFER_SIZE	(2000) // Declaração do tamanho do buffer da mensagem MQTT
-//char msg[MSG_BUFFER_SIZE]; // Criação do array char da mensagem MQTT
 
-//const int capacity = JSON_OBJECT_SIZE(384);
+#define MSG_BUFFER_SIZE	(300) // Declaração do tamanho do buffer da mensagem MQTT
 const int capacity = JSON_OBJECT_SIZE(MSG_BUFFER_SIZE);
 StaticJsonDocument<capacity> JSON_envia_dados; // Objeto JSON que recebe os dados dos sensores e é serializado para envio pelo MQTT.
 char dados_envio[capacity]; // Array char das leituras dos sensores, enviado para o publisher MQTT.
 DynamicJsonDocument JSON_recebe_comandos(100);
 char comandos_recebidos[100]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
+DynamicJsonDocument JSON_DEBUG_MQTT(300);
+char DEBUG_MQTT[300]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
 
 // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem
 static long tempo_task_enviar_dados = 5000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 5000 milisegundos por padrão.
-static long tempo_task_receber_dados = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
+static long tempo_task_receber_comandos = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
 static long tempo_task_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
 static long tempo_task_conexoes_wireless = 500; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
-
-
+static long tempo_task_debug_mqtt = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
+static int stack_size_enviar_dados = 2000;
+static int stack_size_receber_comandos = 2000;
+static int stack_size_ler_sensores = 2000;
+static int stack_size_conexoes_wireless = 2000;
+static int stack_size_debug_mqtt = 3000;
 
 // Variáveis sensores de temperatura. DS18B20 range: -55°C a +125°C. Valores iniciados com -127 pois é o valor padrão da biblioteca caso sensor esteja desconectado.
 static float Temp1 = -127;
@@ -91,20 +95,14 @@ static const uint32_t PORTA = 5000; // A porta que será utilizada (padrão 80).
 // Inicia o servidor na porta selecionada
 // Configurado para escutar na porta 5000, ao invés da 80 padrão.
 static WebServer server(PORTA);
-
 // Algumas informações que podem ser interessantes
 const uint32_t chipID = (uint32_t)(ESP.getEfuseMac() >> 32); // Um ID exclusivo do Chip.
 const String CHIP_ID = "<p> Chip ID: " + String(chipID) + "</p>"; // Montado para ser usado no HTML.
 const String VERSION = "<p> Versão: 5.8 </p>"; // Exemplo de um controle de versão.
-
 // // Informações interessantes agrupadas.
 const String INFOS = VERSION + CHIP_ID;
-
 // // Sinalizador de autorização do OTA.
 boolean OTA_AUTORIZADO = false;
-
-
-
 // // Páginas HTML utilizadas no procedimento OTA.
 String verifica = "<!DOCTYPE html><html><head><title>ESP32 webOTA</title><meta charset='UTF-8'></head><body><h1>ESP32 webOTA</h1><h2>Digite a chave de verificação.<p>Clique em ok para continuar. . .</p></h2>" + INFOS + "<form method='POST' action='/avalia 'enctype='multipart/form-data'> <p><label>Autorização: </label><input type='text' name='autorizacao'></p><input type='submit' value='Ok'></form></body></html>";
 String serverIndex = "<!DOCTYPE html><html><head><title>ESP32 webOTA</title><meta charset='UTF-8'></head><body><h1>ESP32 webOTA</h1><h2>Selecione o arquivo para a atualização e clique em atualizar.</h2>" + INFOS + "<form method='POST' action='/update' enctype='multipart/form-data'><p><input type='file' name='update'></p><p><input type='submit' value='Atualizar'></p></form></body></html>";
