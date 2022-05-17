@@ -27,13 +27,14 @@ char comandos_recebidos[100]; // dados que serão recebidos do broker mqtt pros 
 DynamicJsonDocument JSON_DEBUG_MQTT(300);
 char DEBUG_MQTT[300]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
 
-// Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem
+// Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem:
 static long tempo_task_enviar_dados = 5000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 5000 milisegundos por padrão.
 static long tempo_task_receber_comandos = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
 static long tempo_task_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
-static long tempo_task_conexoes_wireless = 500; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
+static long tempo_task_conexoes_wireless = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
 static long tempo_task_debug_mqtt = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
-static int stack_size_enviar_dados = 2000;
+// Tamanho da memoria alocada para as respectivas Tasks:
+static int stack_size_enviar_dados = 2000; 
 static int stack_size_receber_comandos = 2000;
 static int stack_size_ler_sensores = 2000;
 static int stack_size_conexoes_wireless = 2000;

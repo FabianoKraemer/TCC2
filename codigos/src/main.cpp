@@ -3,6 +3,7 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 #include <esp_system.h>
+
 //#include "OTA.h"
 
 //WebServer server(80);
@@ -20,7 +21,9 @@ long tempo_receber_comandos = 0;
 long tempo_debug_mqtt = 0;
 
 /* Semáforos */
-SemaphoreHandle_t xDebug_semaphore;
+// SemaphoreHandle_t xDebug_semaphore; // Usado inicialmente, alterado para mutex
+static SemaphoreHandle_t mutex; // O semáforo do tipo mutex indica para o scheduler que o intervalo entre take e give possui prioridade máxima, ignorando o nível de prioridade das tasks.
+static SemaphoreHandle_t mutexMQTT; // Mutex para lidar com as chamadas do client. Algumas funções da biblioteca MQTT podem demorar para serem respondidas.
 // Variáveis globais utilizadas estão no "Variaveis.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -156,12 +159,24 @@ void wifi(){
 // Reconecta no broker MQTT.
 void reconnect() {
 
-  if (!client.connected()) {
-    if (client.connect("projeto_1")) {
-      client.subscribe("comandosTCC"); // Dar subscribe no tópico que envia os comandos do NodeRed para cá.
-    }
+  bool conexao_mqtt;
+
+  xSemaphoreTake(mutexMQTT, portMAX_DELAY );
+  conexao_mqtt = client.connected();
+  xSemaphoreGive(mutexMQTT);
+
+  if (!conexao_mqtt) {
+    client.connect("projeto_1");
+    client.subscribe("comandosTCC"); // Dar subscribe no tópico que envia os comandos do NodeRed para cá.  
     //delay(100); // Delay de 1 segundo para cada tentativa de reconectar no broker MQTT.  
   }
+  xSemaphoreTake(mutexMQTT, portMAX_DELAY );
+  conexao_mqtt = client.connected();
+  xSemaphoreGive(mutexMQTT);
+  if (conexao_mqtt) {
+    client.subscribe("comandosTCC"); // Dar subscribe no tópico que envia os comandos do NodeRed para cá. 
+  }
+
 }
 
 // Receber mensagens do tópico MQTT assinado. Essa função é enviada como parâmetro na função client.loop, da biblioteca do MQTT. Lá ele carrega os dados no payload caso haja msg nova.
@@ -179,9 +194,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // Só deserializa se chegar nova mensagem.
   deserializeJson(JSON_recebe_comandos, comandos_recebidos); // Deserializa a msg recebida e joga no objeto JSON.
 
-  // TED: Tempo Envio Dados
-  tempo_task_enviar_dados = JSON_recebe_comandos["TED"];
-  tempo_task_enviar_dados = tempo_task_enviar_dados * 1000;
   tipo_gas = JSON_recebe_comandos["Gas"];
   Serial.println(tempo_task_enviar_dados);
   Serial.println(tipo_gas);
@@ -198,19 +210,19 @@ void indice_bateria(){
   if (bateriaMax >= percentual_bateria) bateriaMax = percentual_bateria; // Salva o maior valor encontrado na leitura da carga da bateria.
   if (bateriaMin <= percentual_bateria) bateriaMin = percentual_bateria; // Salva o menor valor encontrado na leitura da carga da bateria.
 
-  xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+  xSemaphoreTake(mutex, portMAX_DELAY);
   JSON_envia_dados["bateriaMax"] = bateriaMax;
   JSON_envia_dados["bateriaMin"] = bateriaMin;
-  xSemaphoreGive(xDebug_semaphore);
+  xSemaphoreGive(mutex);
 
   int indiceBateria = map(percentual_bateria, 2800, 4094, 0, 100); // Mapeia os valores lidos para o intervalo de 0 a 100, para ficar em percentual.
 
   if (indiceBateria <= 0) indiceBateria = 0; // Caso ocorra alguma leitura menor que 2800 antes do map, fica valor negativo, estabelece o valor 0 para que não ocorra isso.
   else if (indiceBateria >= 100) indiceBateria = 100; // Caso o valor lido tenha ficado maior que 4094, para não dar valor maior que 100, estabelece esse limite. 
 
-  xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+  xSemaphoreTake(mutex, portMAX_DELAY);
   JSON_envia_dados["Bat"] = indiceBateria;
-  xSemaphoreGive(xDebug_semaphore);
+  xSemaphoreGive(mutex);
 }
 
 void temperatura(){
@@ -224,16 +236,16 @@ void temperatura(){
       if (sensores_conectados[n]) { // Se no n específico, tiver um sensor conectado, entrará na condição para pegar o endereço do sensor e medir a temperatura.
         sensortemp.getAddress(Thermometer, n); // Pega o endereço de cada sensor conectado.
         //Temps[n] = sensortemp.getTempC(Thermometer); // Pega a temperatura já convertida para Celsius e grava na posição do sensor no pino no vetor correspondente.
-        xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+        xSemaphoreTake(mutex, portMAX_DELAY);
         JSON_envia_dados["T"][n] = sensortemp.getTempC(Thermometer);; // Grava o valor da temperatura no vetor do JSON da temperatura.
-        xSemaphoreGive(xDebug_semaphore);
+        xSemaphoreGive(mutex);
       }
 
       if (!sensores_conectados[n]) { // Se no n específico, não tiver um sensor conectado, entra na condição. 
         //Temps[n] = -127; // Gravará o valor -127. Esse valor é padrão na biblioteca da Dallas para sensor não conectado.
-        xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+        xSemaphoreTake(mutex, portMAX_DELAY);
         JSON_envia_dados["T"][n] = -127; // Grava o valor da temperatura no vetor do JSON da temperatura.
-        xSemaphoreGive(xDebug_semaphore);
+        xSemaphoreGive(mutex);
       }
     }
 }
@@ -247,9 +259,9 @@ void pressao(){
     i++;
   }
   // P1 = P1 / 50; // Tira a média das 50 leituras.
-  xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+  xSemaphoreTake(mutex, portMAX_DELAY);
   JSON_envia_dados["P1"] = (P1 / 50);
-  xSemaphoreGive(xDebug_semaphore);
+  xSemaphoreGive(mutex);
   P1 = (P1 * 0.1875) / 1000; // Obter tensão.
   P1 = (P1 * 30 - 19.8) / 2.64; // fórmula obtida fazendo uma matriz com 0 bar a 30 bar e 0,66V a 3.3V. Valor do 21.8 na formula é 19.8, foi acrescentado 1 para correção das variações e ficar o mesmo valor do manômetro
 
@@ -260,9 +272,9 @@ void pressao(){
     i++;
   }
   //P2 = P2 / 50; // Tira a média das 50 leituras.
-  xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+  xSemaphoreTake(mutex, portMAX_DELAY);
   JSON_envia_dados["P2"] = (P2 / 50);
-  xSemaphoreGive(xDebug_semaphore);
+  xSemaphoreGive(mutex);
   P2 = (P2 * 0.1875) / 1000; // Obter tensão.
   P2 = (P2 * 10 - 6.6) / 2.64; // Fórmula obtida fazendo uma matriz com 0 bar a 10 bar e 0,66V a 3.3V.
 
@@ -289,14 +301,14 @@ void wattimetro(){
   if (isnan(Wh)) Wh = -1;
   if (isnan(Freq)) Freq = -1;
 
-  xSemaphoreTake(xDebug_semaphore, portMAX_DELAY);
+  xSemaphoreTake(mutex, portMAX_DELAY);
   JSON_envia_dados["W"] = W; // potência Watts
   JSON_envia_dados["V"] = V; // tensão
   JSON_envia_dados["I"] = I; // corrente
   JSON_envia_dados["FP"] = FP; // fator potência
   JSON_envia_dados["Wh"] = Wh; // watt hora
   JSON_envia_dados["freq"] = Freq; // frequência
-  xSemaphoreGive(xDebug_semaphore);
+  xSemaphoreGive(mutex);
 
 }
 
@@ -307,6 +319,8 @@ void conexoes_wireless(void *pvParameters){
   for (;;){
     float tempo_ant = millis();
 
+    bool conexao_mqtt;
+
     // Se perder a conexão WiFi, tenta reconectar.
     if (WiFi.status() != WL_CONNECTED && ativar_wifi == true){
       Serial.println("desconectado");
@@ -314,11 +328,15 @@ void conexoes_wireless(void *pvParameters){
     }
     
     if (WiFi.status() == WL_CONNECTED){
-      //Serial.println("CONECTADO");
       //wifiManager.stopConfigPortal();
       //wifiManager.stopWebPortal();
       //atualizacao_OTA();      
-      if (!client.connected()) reconnect(); // Se perder a conexão com o broker MQTT, tenta reconectar.
+      xSemaphoreTake(mutexMQTT, portMAX_DELAY );
+      conexao_mqtt = client.connected();
+      xSemaphoreGive(mutexMQTT);
+      if (!conexao_mqtt) {
+        reconnect(); // Se perder a conexão com o broker MQTT, tenta reconectar.               
+      }      
       server.handleClient(); // Escutar a porta do webserver para atualização via OTA.
     }
 
@@ -328,9 +346,9 @@ void conexoes_wireless(void *pvParameters){
     //uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 
     float tempo_dep = millis();
-    xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
+    xSemaphoreTake(mutex, portMAX_DELAY );
     tempo_conexoes_wireless = tempo_dep - tempo_ant;
-    xSemaphoreGive(xDebug_semaphore);
+    xSemaphoreGive(mutex);
 
     vTaskDelay(tempo_task_conexoes_wireless / portTICK_PERIOD_MS);
   }
@@ -344,19 +362,22 @@ void enviar_dados(void *pvParameters){
     float tempo_ant = millis(); 
 
     // Usando semáforo pois o JSON está sendo usada em duas tasks com tempos de execução e prioridades diferentes.
-      xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
+      xSemaphoreTake(mutex, portMAX_DELAY );
       serializeJson(JSON_envia_dados, dados_envio);
+      xSemaphoreGive(mutex);
+
+      xSemaphoreTake(mutexMQTT, portMAX_DELAY );
       if(WiFi.status() == WL_CONNECTED && client.connected()) client.publish("subscriberTCC", dados_envio); // Publica o JSON no tópico do broker MQTT.
-      xSemaphoreGive(xDebug_semaphore);
+      xSemaphoreGive(mutexMQTT);
 
     /* Obtém o High Water Mark da task atual.
    Lembre-se: tal informação é obtida em words! */
    // uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
 
     float tempo_dep = millis();
-    xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
+    xSemaphoreTake(mutex, portMAX_DELAY );
     tempo_enviar_dados = tempo_dep - tempo_ant;
-    xSemaphoreGive(xDebug_semaphore);
+    xSemaphoreGive(mutex);
 
     vTaskDelay(tempo_task_enviar_dados/portTICK_PERIOD_MS);
   }
@@ -365,19 +386,18 @@ void enviar_dados(void *pvParameters){
 
 void receber_comandos(void *pvParameters){
 
-  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
-  //wifiManager.resetSettings();
-
   for(;;){
     float tempo_ant = millis();
 
+    xSemaphoreTake(mutexMQTT, portMAX_DELAY );
     if (client.connected() && WiFi.status() == WL_CONNECTED) client.loop(); // Função para verificar se existe mensagem nova no subscriber do MQTT e já grava os dados na variável comandos_recebidos.
+    xSemaphoreGive(mutexMQTT);
+ 
+    float tempo_dep = millis();  
 
-    //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-    float tempo_dep = millis();   
-    xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
+    xSemaphoreTake(mutex, portMAX_DELAY );
     tempo_receber_comandos = tempo_dep - tempo_ant;
-    xSemaphoreGive(xDebug_semaphore);
+    xSemaphoreGive(mutex);
 
     vTaskDelay(tempo_task_receber_comandos/portTICK_PERIOD_MS); 
     
@@ -401,9 +421,9 @@ void ler_sensores(void *pvParameters){
     //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
     
     float tempo_dep = millis();
-    xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
+    xSemaphoreTake(mutex, portMAX_DELAY );
     tempo_ler_sensores = tempo_dep - tempo_ant;
-    xSemaphoreGive(xDebug_semaphore);
+    xSemaphoreGive(mutex);
 
     vTaskDelay(tempo_task_ler_sensores/portTICK_PERIOD_MS);
   }
@@ -416,7 +436,7 @@ void Debug_MQTT(void *pvParameters){
   for(;;){
     float tempo_ant = millis();
 
-    if (!client.connected()) reconnect(); // Caso não esteja conectado no broker MQTT, tenta reconectar.
+    //if (!client.connected()) reconnect(); // Caso não esteja conectado no broker MQTT, tenta reconectar.
 
     uxHighWaterMark = uxTaskGetStackHighWaterMark(xHandle_enviar_dados);
     JSON_DEBUG_MQTT["Size_enviar_dados"] = (stack_size_enviar_dados - uxHighWaterMark);
@@ -434,7 +454,7 @@ void Debug_MQTT(void *pvParameters){
     JSON_DEBUG_MQTT["Size_debug"] = (stack_size_debug_mqtt - uxHighWaterMark);
 
     // Usando semáforo pois o JSON está sendo usada em duas tasks com tempos de execução e prioridades diferentes.
-    xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
+    xSemaphoreTake(mutex, portMAX_DELAY );
     JSON_DEBUG_MQTT["T_enviar_dados"] = tempo_enviar_dados;
     JSON_DEBUG_MQTT["T_conex_wirl"] = tempo_conexoes_wireless;
     JSON_DEBUG_MQTT["T_ler_sens"] = tempo_ler_sensores;
@@ -442,13 +462,14 @@ void Debug_MQTT(void *pvParameters){
     JSON_DEBUG_MQTT["T_debug"] = tempo_debug_mqtt;  
     JSON_DEBUG_MQTT["MinFreeHeap"] = ESP.getMinFreeHeap();
     serializeJson(JSON_DEBUG_MQTT, DEBUG_MQTT);
+    xSemaphoreGive(mutex);
+
+    xSemaphoreTake(mutexMQTT, portMAX_DELAY );
     if(WiFi.status() == WL_CONNECTED && client.connected()) client.publish("subscriber_Debug_TCC", DEBUG_MQTT); // Publica o JSON no tópico do broker MQTT.
-    xSemaphoreGive(xDebug_semaphore);
+    xSemaphoreGive(mutexMQTT);
 
     float tempo_dep = millis();   
-    xSemaphoreTake(xDebug_semaphore, portMAX_DELAY );
     tempo_debug_mqtt = tempo_dep - tempo_ant;
-    xSemaphoreGive(xDebug_semaphore);
 
     vTaskDelay(tempo_task_debug_mqtt/portTICK_PERIOD_MS); 
     
@@ -494,21 +515,28 @@ void setup(){
   //setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager.
   //wifiManager.erase();
   //wifiManager.resetSettings();
-  
+
+   // Create mutex before starting tasks
+  mutex = xSemaphoreCreateMutex();
+  mutexMQTT = xSemaphoreCreateMutex();
+  //xDebug_semaphore = xSemaphoreCreateMutex(); // Criação do semáforo.
 
   wifiManager.setConfigPortalBlocking(false); // Não deixa que o WiFiManager bloqueie a execução enquanto não estiver conectado em nada.
   wifiManager.setWiFiAutoReconnect(true); // Permite a reconexão em rede WiFi, caso perca a conexão momentaneamente.
   wifiManager.setDebugOutput(false); // Desabilita as saídas impressas no serial.
 
+  xSemaphoreTake(mutex, portMAX_DELAY ); // Testando mutex aqui para verificar se continua crashando a ESP.
   wifiManager.autoConnect("ESP_AP", "testeesp");
-  //delay(100); 
+  xSemaphoreGive(mutex);
+  delay(100); // Delay para aguardar configurações do cliente WiFi
   //wifiManager.startWebPortal();
 
   if (WiFi.status() == WL_CONNECTED) atualizacao_OTA(); // Prepara a ESP como webserver para ser conectada e atualizar via OTA.
+  delay(100); // Delay para aguardar configurações do cliente WiFi
 
   client.setBufferSize(MSG_BUFFER_SIZE); // Setar o tamanho do buffer do payload mqtt.
   client.setServer(mqtt_server, 1883);  // Seta o servidor MQTT (Broker) e a porta (porta padrão).
-  client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT.
+  //client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT.
   // if (!client.connected()) { // Conecta no broker MQTT.
   // //Serial.println("4");
   //   reconnect();
@@ -519,7 +547,7 @@ void setup(){
 
   pzem.resetEnergy(); // Reseta as informações salvas internamente no PZEM, como o Wh.
 
-  xDebug_semaphore = xSemaphoreCreateMutex(); // Criação do semáforo.
+  
 
   xTaskCreate(
     enviar_dados,      // Função a ser chamada

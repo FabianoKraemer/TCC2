@@ -1,5 +1,9 @@
 # TCC2
 
+Versão 0.60
+
+- Substituição dos semáforos binários por mutex. E adicionado 2 mutex: um para dados de variáveis compartilhadas entre as tasks e outro para acesso ao objeto MQTT com criação/connect e consultas de conexão.
+
 Versão 0.59
 
 - Adicionado Task de "debug" via MQTT, analisando tempos de execução das Task, memória ocupadas por elas e quantidade livre de RAM total.
