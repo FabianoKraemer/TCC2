@@ -19,7 +19,8 @@
         "y": 140,
         "wires": [
             [
-                "efc7db1a.010e88"
+                "efc7db1a.010e88",
+                "617b8b2a.172164"
             ]
         ]
     },
@@ -31,12 +32,10 @@
         "property": "payload",
         "action": "",
         "pretty": false,
-        "x": 350,
+        "x": 370,
         "y": 140,
         "wires": [
-            [
-                "a060cc15.fb1ca"
-            ]
+            []
         ]
     },
     {
@@ -44,12 +43,12 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "",
-        "func": "//var teste = msg.payload[\"pressao\"];\n//msg.payload = teste;\n//return msg;\n\n//flow.set('sensor3',{ payload: msg.payload[\"T\"][2]});\nflow.set('sensor3',msg.payload[\"T\"][2]);\n\nvar msg1 = { payload: msg.payload[\"Bat\"]};\nvar msg2 = { payload: msg.payload[\"T\"][0]};\nvar msg3 = { payload: msg.payload[\"T\"][1]};\nvar msg4 = { payload: msg.payload[\"T\"][2]};\nvar msg5 = { payload: msg.payload[\"T\"][3]};\nvar msg6 = { payload: msg.payload[\"T\"][4]};\nvar msg7 = { payload: msg.payload[\"T\"][5]};\nvar msg8 = { payload: msg.payload[\"W\"]};\nvar msg9 = { payload: msg.payload[\"V\"]};\nvar msg10 = { payload: msg.payload[\"I\"]};\nvar msg11 = { payload: msg.payload[\"FP\"]};\nvar msg12 = { payload: msg.payload[\"Wh\"]};\nvar msg13 = { payload: msg.payload[\"freq\"]};\nvar msg14 = { payload: msg.payload[\"P1\"]};\nvar msg15 = { payload: msg.payload[\"P2\"]};\n\n\nreturn [msg1, msg2, msg3, msg4, msg5, msg6, msg7, \n        msg8, msg9, msg10, msg11, msg12, msg13, msg14, msg15];",
+        "func": "//var teste = msg.payload[\"pressao\"];\n//msg.payload = teste;\n//return msg;\n\n//flow.set('sensor3',{ payload: msg.payload[\"T\"][2]});\nflow.set('sensor3',msg.payload[\"T\"][2]);\nflow.set('TED',msg.payload[\"TED\"]);\n\nvar msg1 = { payload: msg.payload[\"Bat\"]};\nvar msg2 = { payload: msg.payload[\"T\"][0]};\nvar msg3 = { payload: msg.payload[\"T\"][1]};\nvar msg4 = { payload: msg.payload[\"T\"][2]};\nvar msg5 = { payload: msg.payload[\"T\"][3]};\nvar msg6 = { payload: msg.payload[\"T\"][4]};\nvar msg7 = { payload: msg.payload[\"T\"][5]};\nvar msg8 = { payload: msg.payload[\"W\"]};\nvar msg9 = { payload: msg.payload[\"V\"]};\nvar msg10 = { payload: msg.payload[\"I\"]};\nvar msg11 = { payload: msg.payload[\"FP\"]};\nvar msg12 = { payload: msg.payload[\"Wh\"]};\nvar msg13 = { payload: msg.payload[\"freq\"]};\nvar msg14 = { payload: msg.payload[\"P1\"]};\nvar msg15 = { payload: msg.payload[\"P2\"]};\n\n\nreturn [msg1, msg2, msg3, msg4, msg5, msg6, msg7, \n        msg8, msg9, msg10, msg11, msg12, msg13, msg14, msg15];",
         "outputs": 15,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 660,
+        "x": 760,
         "y": 460,
         "wires": [
             [
@@ -113,7 +112,7 @@
         "retentionPolicyV18Flux": "",
         "org": "organisation",
         "bucket": "bucket",
-        "x": 960,
+        "x": 1080,
         "y": 80,
         "wires": []
     },
@@ -139,7 +138,7 @@
         ],
         "seg1": "",
         "seg2": "",
-        "x": 1180,
+        "x": 1300,
         "y": 180,
         "wires": []
     },
@@ -153,7 +152,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 960,
+        "x": 1080,
         "y": 160,
         "wires": [
             [
@@ -187,7 +186,7 @@
         ],
         "seg1": "",
         "seg2": "",
-        "x": 1180,
+        "x": 1300,
         "y": 340,
         "wires": []
     },
@@ -213,7 +212,7 @@
         ],
         "seg1": "",
         "seg2": "",
-        "x": 1180,
+        "x": 1300,
         "y": 420,
         "wires": []
     },
@@ -239,7 +238,7 @@
         ],
         "seg1": "",
         "seg2": "",
-        "x": 1180,
+        "x": 1300,
         "y": 500,
         "wires": []
     },
@@ -265,7 +264,7 @@
         ],
         "seg1": "",
         "seg2": "",
-        "x": 1180,
+        "x": 1300,
         "y": 580,
         "wires": []
     },
@@ -275,13 +274,13 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 1,
-        "width": 0,
-        "height": 0,
+        "width": "6",
+        "height": "2",
         "name": "Watt",
         "label": "Watt",
         "format": "{{value | number:2}} Watts",
         "layout": "col-center",
-        "x": 1170,
+        "x": 1290,
         "y": 720,
         "wires": []
     },
@@ -291,13 +290,13 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 2,
-        "width": 0,
-        "height": 0,
+        "width": "6",
+        "height": "2",
         "name": "Tensão",
         "label": "Tensão",
         "format": "{{value | number:2}} V",
         "layout": "col-center",
-        "x": 960,
+        "x": 1080,
         "y": 640,
         "wires": []
     },
@@ -307,13 +306,13 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 3,
-        "width": 0,
-        "height": 0,
+        "width": "6",
+        "height": "2",
         "name": "Corrente",
         "label": "Corrente",
         "format": "{{value | number:2}} A",
         "layout": "col-center",
-        "x": 960,
+        "x": 1080,
         "y": 680,
         "wires": []
     },
@@ -323,13 +322,13 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 4,
-        "width": 0,
-        "height": 0,
+        "width": "6",
+        "height": "2",
         "name": "Fator de Potência",
         "label": "Fator de Potência",
         "format": "{{value | number:2}}",
         "layout": "col-center",
-        "x": 990,
+        "x": 1110,
         "y": 720,
         "wires": []
     },
@@ -339,13 +338,13 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 5,
-        "width": 0,
-        "height": 0,
+        "width": "6",
+        "height": "2",
         "name": "Watt/hora",
         "label": "Watt/hora",
         "format": "{{value | number:2}} Wh",
         "layout": "col-center",
-        "x": 960,
+        "x": 1080,
         "y": 760,
         "wires": []
     },
@@ -355,13 +354,13 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 6,
-        "width": 0,
-        "height": 0,
+        "width": "6",
+        "height": "2",
         "name": "Frequência",
         "label": "Frequência",
         "format": "{{value | number:2}} Hz",
         "layout": "col-center",
-        "x": 970,
+        "x": 1090,
         "y": 800,
         "wires": []
     },
@@ -375,7 +374,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 950,
+        "x": 1070,
         "y": 600,
         "wires": [
             [
@@ -396,7 +395,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 960,
+        "x": 1080,
         "y": 240,
         "wires": [
             [
@@ -418,7 +417,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 960,
+        "x": 1080,
         "y": 320,
         "wires": [
             [
@@ -440,7 +439,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 960,
+        "x": 1080,
         "y": 400,
         "wires": [
             [
@@ -462,7 +461,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 960,
+        "x": 1080,
         "y": 480,
         "wires": [
             [
@@ -484,7 +483,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 960,
+        "x": 1080,
         "y": 560,
         "wires": [
             [
@@ -735,7 +734,7 @@
         "lineWidth": 3,
         "bgcolorFromTheme": true,
         "diffCenter": "",
-        "x": 960,
+        "x": 1080,
         "y": 120,
         "wires": []
     },
@@ -779,7 +778,7 @@
         "lineWidth": "3",
         "bgcolorFromTheme": true,
         "diffCenter": "",
-        "x": 1180,
+        "x": 1300,
         "y": 260,
         "wires": []
     },
@@ -928,7 +927,7 @@
         "lineWidth": 3,
         "bgcolorFromTheme": true,
         "diffCenter": "",
-        "x": 960,
+        "x": 1080,
         "y": 840,
         "wires": []
     },
@@ -972,7 +971,7 @@
         "lineWidth": 3,
         "bgcolorFromTheme": true,
         "diffCenter": "10",
-        "x": 960,
+        "x": 1080,
         "y": 880,
         "wires": []
     },
@@ -1037,8 +1036,8 @@
         "name": "Gráfico Sensor 1",
         "group": "7d7ed425.3902dc",
         "order": 1,
-        "width": 3,
-        "height": 3,
+        "width": "8",
+        "height": "4",
         "label": "Sensor 1",
         "chartType": "line",
         "legend": "false",
@@ -1067,7 +1066,7 @@
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 1210,
+        "x": 1330,
         "y": 140,
         "wires": [
             []
@@ -1080,8 +1079,8 @@
         "name": "Gráfico Sensor 2",
         "group": "74c3395f.a1e678",
         "order": 1,
-        "width": 3,
-        "height": 3,
+        "width": "8",
+        "height": "4",
         "label": "Sensor 2",
         "chartType": "line",
         "legend": "false",
@@ -1110,7 +1109,7 @@
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 1210,
+        "x": 1330,
         "y": 220,
         "wires": [
             []
@@ -1123,8 +1122,8 @@
         "name": "Gráfico Sensor 3",
         "group": "502aa149.7d1b5",
         "order": 1,
-        "width": 3,
-        "height": 3,
+        "width": "8",
+        "height": "4",
         "label": "Sensor 3",
         "chartType": "line",
         "legend": "false",
@@ -1153,7 +1152,7 @@
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 1210,
+        "x": 1330,
         "y": 300,
         "wires": [
             []
@@ -1166,8 +1165,8 @@
         "name": "Gráfico Sensor 4",
         "group": "73b7a118.b8d5e",
         "order": 1,
-        "width": 3,
-        "height": 3,
+        "width": "8",
+        "height": "4",
         "label": "Sensor 4",
         "chartType": "line",
         "legend": "false",
@@ -1196,7 +1195,7 @@
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 1210,
+        "x": 1330,
         "y": 380,
         "wires": [
             []
@@ -1209,7 +1208,7 @@
         "name": "Gráfico Sensor 5",
         "group": "d89a85c0.03a228",
         "order": 1,
-        "width": 6,
+        "width": "8",
         "height": 4,
         "label": "Sensor 5",
         "chartType": "line",
@@ -1239,7 +1238,7 @@
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 1210,
+        "x": 1330,
         "y": 460,
         "wires": [
             []
@@ -1252,8 +1251,8 @@
         "name": "Gráfico Sensor 6",
         "group": "d2dcf8f4.1036e8",
         "order": 1,
-        "width": 6,
-        "height": 3,
+        "width": "8",
+        "height": "4",
         "label": "Sensor 6",
         "chartType": "line",
         "legend": "false",
@@ -1282,33 +1281,8 @@
         ],
         "outputs": 1,
         "useDifferentColor": false,
-        "x": 1210,
+        "x": 1330,
         "y": 540,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "f9b72b52.071868",
-        "type": "change",
-        "z": "1a7acb0f.16a335",
-        "name": "change",
-        "rules": [
-            {
-                "t": "set",
-                "p": "enable",
-                "pt": "msg",
-                "to": "false",
-                "tot": "bool"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 1140,
-        "y": 60,
         "wires": [
             []
         ]
@@ -1583,7 +1557,7 @@
         "type": "debug",
         "z": "1a7acb0f.16a335",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1617,30 +1591,16 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "",
-        "func": "var eita;\n\nflow.get('botao_temp');\nflow.get('botao_watt');\nflow.get('botao_pressao');\n\nmsg.payload = flow.get('botao_temp');\n//msg.payload = \"teste;\"\nreturn msg;",
+        "func": "flow.set('teste', \"iniciou\");\n\n//flow.get('botao_temp');\n//flow.get('botao_watt');\n//flow.get('botao_pressao');\n\n//msg.payload = flow.get('botao_temp');\nmsg.payload = flow.get('teste');\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 600,
-        "y": 80,
+        "x": 560,
+        "y": 120,
         "wires": [
-            [
-                "668cc129.bf0b1"
-            ]
+            []
         ]
-    },
-    {
-        "id": "668cc129.bf0b1",
-        "type": "link out",
-        "z": "1a7acb0f.16a335",
-        "name": "Debug envia",
-        "links": [
-            "3c8c6f24.49a13"
-        ],
-        "x": 715,
-        "y": 80,
-        "wires": []
     },
     {
         "id": "1e1a8d5e.39a4d3",
@@ -1658,17 +1618,15 @@
         ],
         "repeat": "",
         "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
+        "once": true,
+        "onceDelay": "1",
         "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 450,
+        "payload": "{\"T\":[-127,-127,-127,-127,-127,-127],\"W\":-1,\"V\":-1,\"I\":-1,\"FP\":-1,\"Wh\":-1,\"freq\":-1,\"P1\":0,\"P2\":0,\"Bat\":0,\"TED\":5000,\"Gas\":0,\"bateriaMax\":0,\"bateriaMin\":5000}",
+        "payloadType": "json",
+        "x": 370,
         "y": 80,
         "wires": [
-            [
-                "390bce03.87d602"
-            ]
+            []
         ]
     },
     {
@@ -1696,7 +1654,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1055,
+        "x": 1175,
         "y": 200,
         "wires": []
     },
@@ -1708,7 +1666,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1055,
+        "x": 1175,
         "y": 340,
         "wires": []
     },
@@ -1720,7 +1678,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1055,
+        "x": 1175,
         "y": 260,
         "wires": []
     },
@@ -1732,7 +1690,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1055,
+        "x": 1175,
         "y": 420,
         "wires": []
     },
@@ -1744,7 +1702,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1055,
+        "x": 1175,
         "y": 500,
         "wires": []
     },
@@ -1756,7 +1714,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1055,
+        "x": 1175,
         "y": 580,
         "wires": []
     },
@@ -1768,7 +1726,7 @@
         "links": [
             "3004b20.89c294e"
         ],
-        "x": 1095,
+        "x": 1215,
         "y": 620,
         "wires": []
     },
@@ -1889,22 +1847,46 @@
         ]
     },
     {
-        "id": "59008f1d.30a33",
-        "type": "config",
+        "id": "617b8b2a.172164",
+        "type": "mqtt-check",
+        "z": "1a7acb0f.16a335",
+        "host": "localhost",
+        "port": "1883",
+        "username": "",
+        "password": "",
+        "name": "",
+        "x": 380,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "511deb09.b99b24",
+        "type": "inject",
         "z": "1a7acb0f.16a335",
         "name": "",
-        "properties": [
+        "props": [
             {
-                "p": "sensor3",
-                "pt": "flow",
-                "to": "-127",
-                "tot": "num"
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
             }
         ],
-        "active": true,
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "str",
         "x": 570,
-        "y": 180,
-        "wires": []
+        "y": 460,
+        "wires": [
+            []
+        ]
     },
     {
         "id": "bd075b1.4fd12a8",
@@ -1997,9 +1979,9 @@
         "name": "Wattimetro",
         "tab": "2118dd5a.5f9512",
         "order": 4,
-        "disp": true,
-        "width": 6,
-        "collapse": true
+        "disp": false,
+        "width": "6",
+        "collapse": false
     },
     {
         "id": "69ba0a78.e60d64",
@@ -2058,8 +2040,8 @@
         "name": "graficoSensor1",
         "tab": "2a305549.fbb63a",
         "order": 2,
-        "disp": true,
-        "width": "6",
+        "disp": false,
+        "width": "8",
         "collapse": false
     },
     {
@@ -2068,8 +2050,8 @@
         "name": "graficoSensor2",
         "tab": "2a305549.fbb63a",
         "order": 3,
-        "disp": true,
-        "width": "6",
+        "disp": false,
+        "width": "8",
         "collapse": false
     },
     {
@@ -2078,8 +2060,8 @@
         "name": "graficoSensor3",
         "tab": "2a305549.fbb63a",
         "order": 4,
-        "disp": true,
-        "width": "6",
+        "disp": false,
+        "width": "8",
         "collapse": false
     },
     {
@@ -2088,8 +2070,8 @@
         "name": "graficoSensor4",
         "tab": "2a305549.fbb63a",
         "order": 5,
-        "disp": true,
-        "width": "6",
+        "disp": false,
+        "width": "8",
         "collapse": false
     },
     {
@@ -2098,8 +2080,8 @@
         "name": "graficoSensor5",
         "tab": "2a305549.fbb63a",
         "order": 6,
-        "disp": true,
-        "width": "6",
+        "disp": false,
+        "width": "8",
         "collapse": false
     },
     {
@@ -2108,8 +2090,8 @@
         "name": "graficoSensor6",
         "tab": "2a305549.fbb63a",
         "order": 7,
-        "disp": true,
-        "width": "6",
+        "disp": false,
+        "width": "8",
         "collapse": false
     },
     {
