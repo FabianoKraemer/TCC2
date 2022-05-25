@@ -19,8 +19,7 @@
         "y": 140,
         "wires": [
             [
-                "efc7db1a.010e88",
-                "617b8b2a.172164"
+                "efc7db1a.010e88"
             ]
         ]
     },
@@ -35,68 +34,26 @@
         "x": 370,
         "y": 140,
         "wires": [
-            []
+            [
+                "a060cc15.fb1ca",
+                "87d7f3aa.acdf2"
+            ]
         ]
     },
     {
         "id": "a060cc15.fb1ca",
         "type": "function",
         "z": "1a7acb0f.16a335",
-        "name": "",
-        "func": "//var teste = msg.payload[\"pressao\"];\n//msg.payload = teste;\n//return msg;\n\n//flow.set('sensor3',{ payload: msg.payload[\"T\"][2]});\nflow.set('sensor3',msg.payload[\"T\"][2]);\nflow.set('TED',msg.payload[\"TED\"]);\n\nvar msg1 = { payload: msg.payload[\"Bat\"]};\nvar msg2 = { payload: msg.payload[\"T\"][0]};\nvar msg3 = { payload: msg.payload[\"T\"][1]};\nvar msg4 = { payload: msg.payload[\"T\"][2]};\nvar msg5 = { payload: msg.payload[\"T\"][3]};\nvar msg6 = { payload: msg.payload[\"T\"][4]};\nvar msg7 = { payload: msg.payload[\"T\"][5]};\nvar msg8 = { payload: msg.payload[\"W\"]};\nvar msg9 = { payload: msg.payload[\"V\"]};\nvar msg10 = { payload: msg.payload[\"I\"]};\nvar msg11 = { payload: msg.payload[\"FP\"]};\nvar msg12 = { payload: msg.payload[\"Wh\"]};\nvar msg13 = { payload: msg.payload[\"freq\"]};\nvar msg14 = { payload: msg.payload[\"P1\"]};\nvar msg15 = { payload: msg.payload[\"P2\"]};\n\n\nreturn [msg1, msg2, msg3, msg4, msg5, msg6, msg7, \n        msg8, msg9, msg10, msg11, msg12, msg13, msg14, msg15];",
-        "outputs": 15,
+        "name": "flow variaveis",
+        "func": "//var teste = msg.payload[\"pressao\"];\n//msg.payload = teste;\n//return msg;\n\n//flow.set('sensor3',{ payload: msg.payload[\"T\"][2]});\nflow.set('bateria',msg.payload[\"Bat\"]);\nflow.set('sensor1',msg.payload[\"T\"][0]);\nflow.set('sensor2',msg.payload[\"T\"][1]);\nflow.set('sensor3',msg.payload[\"T\"][2]);\nflow.set('sensor4',msg.payload[\"T\"][3]);\nflow.set('sensor5',msg.payload[\"T\"][4]);\nflow.set('sensor6',msg.payload[\"T\"][5]);\nflow.set('Watt',msg.payload[\"W\"]);\nflow.set('Tensao',msg.payload[\"V\"]);\nflow.set('Corrente',msg.payload[\"I\"]);\nflow.set('FatorPotencia',msg.payload[\"FP\"]);\nflow.set('WattHora',msg.payload[\"Wh\"]);\nflow.set('freq',msg.payload[\"freq\"]);\nflow.set('P1',msg.payload[\"P1\"]);\nflow.set('P2',msg.payload[\"P2\"]);\n\nflow.set('TED',msg.payload[\"TED\"]);\n\n//var msg1 = { payload: msg.payload[\"Bat\"]};\n//var msg2 = { payload: msg.payload[\"T\"][0]};\n//var msg3 = { payload: msg.payload[\"T\"][1]};\n//var msg4 = { payload: msg.payload[\"T\"][2]};\n//var msg5 = { payload: msg.payload[\"T\"][3]};\n//var msg6 = { payload: msg.payload[\"T\"][4]};\n//var msg7 = { payload: msg.payload[\"T\"][5]};\n//var msg8 = { payload: msg.payload[\"W\"]};\n//var msg9 = { payload: msg.payload[\"V\"]};\n//var msg10 = { payload: msg.payload[\"I\"]};\n//var msg11 = { payload: msg.payload[\"FP\"]};\n//var msg12 = { payload: msg.payload[\"Wh\"]};\n//var msg13 = { payload: msg.payload[\"freq\"]};\n//var msg14 = { payload: msg.payload[\"P1\"]};\n//var msg15 = { payload: msg.payload[\"P2\"]};\n\nreturn msg;",
+        "outputs": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 760,
-        "y": 460,
-        "wires": [
-            [
-                "6ca1df87.d4a75"
-            ],
-            [
-                "43b31019.c9944"
-            ],
-            [
-                "367d0005.6d759"
-            ],
-            [
-                "c3264f12.5984c"
-            ],
-            [
-                "ad786165.2a2ed"
-            ],
-            [
-                "eb041d34.a868f"
-            ],
-            [
-                "20c4acce.512284"
-            ],
-            [
-                "eef0ae54.837aa"
-            ],
-            [
-                "5cdc2f0f.36ddc"
-            ],
-            [
-                "2e2ecea9.8acc02"
-            ],
-            [
-                "a310cd57.7e3bc"
-            ],
-            [
-                "42010708.b07dc8"
-            ],
-            [
-                "fcdcb99b.35ac48"
-            ],
-            [
-                "6436868e.eb1318"
-            ],
-            [
-                "4ca03e73.378c3"
-            ]
-        ]
+        "x": 580,
+        "y": 140,
+        "wires": [],
+        "info": "Alocação dos dados do JSON em variáveis flow (flow.set)"
     },
     {
         "id": "82ce56d0.055aa8",
@@ -112,8 +69,8 @@
         "retentionPolicyV18Flux": "",
         "org": "organisation",
         "bucket": "bucket",
-        "x": 1080,
-        "y": 80,
+        "x": 1300,
+        "y": 60,
         "wires": []
     },
     {
@@ -123,8 +80,8 @@
         "name": "Sensor 1",
         "group": "eee38713.4ddce8",
         "order": 1,
-        "width": "4",
-        "height": "3",
+        "width": 4,
+        "height": 3,
         "gtype": "gage",
         "title": "Sensor 1",
         "label": "C°",
@@ -147,7 +104,7 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Sensor 1",
-        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Principal_Sensor_1\",\n                        \"Gráficos_graficoSensor1\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Principal_Sensor_1\",\n                        \"Gráficos_graficoSensor1\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Principal_Sensor_1\",\n                    \"Gráficos_graficoSensor1\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];\n\n//    controleUI = {\n//        \"group\": {\n//            \"hide\": [\n//                \"TCC_Sensor_1\",\n//            ],\n//        \"show\": [\n//            \"Admin_Control\",\n//            \"Admin_admin2\"\n//            ]\n//        }\n//    }\n\n//msg = {\n//    \"payload\" : 10, //seu valor payload\n//    \"enabled\" : value //recebe valor de habilitar e desabilitar o gauge\n//}",
+        "func": "var controleUI = flow.get('sensor1');\nmsg.payload = flow.get('sensor1');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Sensores_Sensor_1\",\n                        \"Gráficos_graficoSensor1\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Sensores_Sensor_1\",\n                        \"Gráficos_graficoSensor1\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Sensores_Sensor_1\",\n                    \"Gráficos_graficoSensor1\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];\n\n//    controleUI = {\n//        \"group\": {\n//            \"hide\": [\n//                \"TCC_Sensor_1\",\n//            ],\n//        \"show\": [\n//            \"Admin_Control\",\n//            \"Admin_admin2\"\n//            ]\n//        }\n//    }\n\n//msg = {\n//    \"payload\" : 10, //seu valor payload\n//    \"enabled\" : value //recebe valor de habilitar e desabilitar o gauge\n//}",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -157,7 +114,8 @@
         "wires": [
             [
                 "8362c3d9.c8fad",
-                "3cc994f3.2a323c"
+                "3cc994f3.2a323c",
+                "b69b24fe.540248"
             ],
             [
                 "4396e1b2.7cbc1"
@@ -171,8 +129,8 @@
         "name": "Sensor 3",
         "group": "a2bffc3e.e0b57",
         "order": 1,
-        "width": "4",
-        "height": "3",
+        "width": 4,
+        "height": 3,
         "gtype": "gage",
         "title": "Sensor 3",
         "label": "C°",
@@ -197,8 +155,8 @@
         "name": "Sensor 4",
         "group": "61db0928.008e68",
         "order": 1,
-        "width": "4",
-        "height": "3",
+        "width": 4,
+        "height": 3,
         "gtype": "donut",
         "title": "Sensor 4",
         "label": "C°",
@@ -223,8 +181,8 @@
         "name": "Sensor 5",
         "group": "8b690fbf.5fb4a",
         "order": 1,
-        "width": "4",
-        "height": "3",
+        "width": 4,
+        "height": 3,
         "gtype": "compass",
         "title": "Sensor 5",
         "label": "C°",
@@ -249,8 +207,8 @@
         "name": "Sensor 6",
         "group": "ae08bb4b.7a19d8",
         "order": 1,
-        "width": "4",
-        "height": "3",
+        "width": 4,
+        "height": 3,
         "gtype": "wave",
         "title": "Sensor 6",
         "label": "C°",
@@ -274,14 +232,14 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 1,
-        "width": "6",
-        "height": "2",
+        "width": 6,
+        "height": 2,
         "name": "Watt",
         "label": "Watt",
         "format": "{{value | number:2}} Watts",
         "layout": "col-center",
         "x": 1290,
-        "y": 720,
+        "y": 640,
         "wires": []
     },
     {
@@ -290,14 +248,14 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 2,
-        "width": "6",
-        "height": "2",
+        "width": 6,
+        "height": 2,
         "name": "Tensão",
         "label": "Tensão",
         "format": "{{value | number:2}} V",
         "layout": "col-center",
-        "x": 1080,
-        "y": 640,
+        "x": 1300,
+        "y": 700,
         "wires": []
     },
     {
@@ -306,14 +264,14 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 3,
-        "width": "6",
-        "height": "2",
+        "width": 6,
+        "height": 2,
         "name": "Corrente",
         "label": "Corrente",
         "format": "{{value | number:2}} A",
         "layout": "col-center",
-        "x": 1080,
-        "y": 680,
+        "x": 1300,
+        "y": 800,
         "wires": []
     },
     {
@@ -322,14 +280,14 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 4,
-        "width": "6",
-        "height": "2",
+        "width": 6,
+        "height": 2,
         "name": "Fator de Potência",
         "label": "Fator de Potência",
         "format": "{{value | number:2}}",
         "layout": "col-center",
-        "x": 1110,
-        "y": 720,
+        "x": 1330,
+        "y": 860,
         "wires": []
     },
     {
@@ -338,14 +296,14 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 5,
-        "width": "6",
-        "height": "2",
+        "width": 6,
+        "height": 2,
         "name": "Watt/hora",
         "label": "Watt/hora",
         "format": "{{value | number:2}} Wh",
         "layout": "col-center",
-        "x": 1080,
-        "y": 760,
+        "x": 1300,
+        "y": 920,
         "wires": []
     },
     {
@@ -354,14 +312,14 @@
         "z": "1a7acb0f.16a335",
         "group": "bf580dbe.73685",
         "order": 6,
-        "width": "6",
-        "height": "2",
+        "width": 6,
+        "height": 2,
         "name": "Frequência",
         "label": "Frequência",
         "format": "{{value | number:2}} Hz",
         "layout": "col-center",
-        "x": 1090,
-        "y": 800,
+        "x": 1310,
+        "y": 980,
         "wires": []
     },
     {
@@ -369,19 +327,16 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Watt",
-        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -1) {\n    controleUI = {payload : {\"group\": {\"show\": [\"TCC_Wattimetro\",]}}}\n    return [msg, controleUI];\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"TCC_Wattimetro\",]}}}\n\nreturn [msg, controleUI];",
-        "outputs": 2,
+        "func": "var controleUI = flow.get('Watt');\nmsg.payload = flow.get('Watt');\n\nif (controleUI <= 0) {\n    //controleUI = {payload : {\"group\": {\"hide\": [\"Principal_Wattimetro\",]}}}\n    //flow.set('Watt',0);\n    return msg;\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"Sensores_Wattimetro\",]}}}\n\nreturn msg;",
+        "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 1070,
-        "y": 600,
+        "x": 1090,
+        "y": 640,
         "wires": [
             [
                 "8296ef1b.98031"
-            ],
-            [
-                "5253213.10464e"
             ]
         ]
     },
@@ -390,7 +345,7 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Sensor 2",
-        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Principal_Sensor_2\",\n                        \"Gráficos_graficoSensor2\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Principal_Sensor_2\",\n                        \"Gráficos_graficoSensor2\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Principal_Sensor_2\",\n                    \"Gráficos_graficoSensor2\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];",
+        "func": "var controleUI = flow.get('sensor2');\nmsg.payload = flow.get('sensor2');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Sensores_Sensor_2\",\n                        \"Gráficos_graficoSensor2\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Sensores_Sensor_2\",\n                        \"Gráficos_graficoSensor2\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Sensores_Sensor_2\",\n                    \"Gráficos_graficoSensor2\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -400,7 +355,8 @@
         "wires": [
             [
                 "2fb335db.78650a",
-                "b4c83323.176cb"
+                "b4c83323.176cb",
+                "b69b24fe.540248"
             ],
             [
                 "76b38ef7.7cebb"
@@ -412,7 +368,7 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Sensor 3",
-        "func": "var controleUI = flow.get('sensor3');\nmsg.payload = flow.get('sensor3');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Principal_Sensor_3\",\n                        \"Gráficos_graficoSensor3\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Principal_Sensor_3\",\n                        \"Gráficos_graficoSensor3\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\n                    \"Principal_Sensor_3\",\n                    \"Gráficos_graficoSensor3\"\n                    ]\n            }\n        }\n    }\n}\n\nreturn [msg, controleUI];",
+        "func": "var controleUI = flow.get('sensor3');\nmsg.payload = flow.get('sensor3');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Sensores_Sensor_3\",\n                        \"Gráficos_graficoSensor3\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Sensores_Sensor_3\",\n                        \"Gráficos_graficoSensor3\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\n                    \"Sensores_Sensor_3\",\n                    \"Gráficos_graficoSensor3\"\n                    ]\n            }\n        }\n    }\n}\n\nreturn [msg, controleUI];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -422,7 +378,8 @@
         "wires": [
             [
                 "86b24f5c.dbfb4",
-                "6c48eb6e.3740f4"
+                "6c48eb6e.3740f4",
+                "b69b24fe.540248"
             ],
             [
                 "991209fa.bcb368"
@@ -434,7 +391,7 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Sensor 4",
-        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Principal_Sensor_4\",\n                        \"Gráficos_graficoSensor4\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Principal_Sensor_4\",\n                        \"Gráficos_graficoSensor4\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Principal_Sensor_4\",\n                    \"Gráficos_graficoSensor4\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];",
+        "func": "var controleUI = flow.get('sensor4');\nmsg.payload = flow.get('sensor4');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Sensores_Sensor_4\",\n                        \"Gráficos_graficoSensor4\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Sensores_Sensor_4\",\n                        \"Gráficos_graficoSensor4\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Sensores_Sensor_4\",\n                    \"Gráficos_graficoSensor4\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -444,7 +401,8 @@
         "wires": [
             [
                 "e6e8b785.b28348",
-                "6dfd13c8.3d6c3c"
+                "6dfd13c8.3d6c3c",
+                "b69b24fe.540248"
             ],
             [
                 "51e6958a.40571c"
@@ -456,7 +414,7 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Sensor 5",
-        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Principal_Sensor_5\",\n                        \"Gráficos_graficoSensor5\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Principal_Sensor_5\",\n                        \"Gráficos_graficoSensor5\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Principal_Sensor_5\",\n                    \"Gráficos_graficoSensor5\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];",
+        "func": "var controleUI = flow.get('sensor5');\nmsg.payload = flow.get('sensor5');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Sensores_Sensor_5\",\n                        \"Gráficos_graficoSensor5\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Sensores_Sensor_5\",\n                        \"Gráficos_graficoSensor5\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Sensores_Sensor_5\",\n                    \"Gráficos_graficoSensor5\"\n                    ]\n            }\n        }\n    }\n}\nreturn [msg, controleUI];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -466,7 +424,8 @@
         "wires": [
             [
                 "bf520dbe.5238d",
-                "1b4773c5.eab42c"
+                "1b4773c5.eab42c",
+                "b69b24fe.540248"
             ],
             [
                 "937afb68.cc6c58"
@@ -478,7 +437,7 @@
         "type": "function",
         "z": "1a7acb0f.16a335",
         "name": "Sensor 6",
-        "func": "var controleUI = msg.payload;\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Principal_Sensor_6\",\n                        \"Gráficos_graficoSensor6\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Principal_Sensor_6\",\n                        \"Gráficos_graficoSensor6\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Principal_Sensor_6\",\n                    \"Gráficos_graficoSensor6\"\n                    ]\n            }\n        }\n    }\n}\n\nreturn [msg, controleUI];",
+        "func": "var controleUI = flow.get('sensor6');\nmsg.payload = flow.get('sensor6');\n\nif (controleUI <= -127) {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\"Sensores_Sensor_6\",\n                        \"Gráficos_graficoSensor6\"\n                ]\n            }\n        },\n    }\n    //msg.visible = false;\n    return [msg, controleUI];\n}\n\nvar abilitar = flow.get('botao_temp');\n\nif (abilitar == true){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"show\": [\"Sensores_Sensor_6\",\n                        \"Gráficos_graficoSensor6\"\n                ]\n            }\n        }\n    }   \n} else {\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"false\": [\n                    \"Sensores_Sensor_6\",\n                    \"Gráficos_graficoSensor6\"\n                    ]\n            }\n        }\n    }\n}\n\nreturn [msg, controleUI];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -488,7 +447,8 @@
         "wires": [
             [
                 "7ddd5649.51a3a8",
-                "2eca0af9.0ff1b6"
+                "2eca0af9.0ff1b6",
+                "b69b24fe.540248"
             ],
             [
                 "69ba5f56.e2e75"
@@ -614,9 +574,9 @@
         "outs": "end",
         "topic": "TED",
         "topicType": "str",
-        "min": "5",
-        "max": "300",
-        "step": "5",
+        "min": "2",
+        "max": "120",
+        "step": "1",
         "x": 130,
         "y": 780,
         "wires": [
@@ -682,7 +642,7 @@
         "z": "1a7acb0f.16a335",
         "group": "fbc95915.298378",
         "order": 1,
-        "width": 1,
+        "width": "3",
         "height": 1,
         "name": "Bateria",
         "icon": "fa-battery-full",
@@ -734,8 +694,8 @@
         "lineWidth": 3,
         "bgcolorFromTheme": true,
         "diffCenter": "",
-        "x": 1080,
-        "y": 120,
+        "x": 1300,
+        "y": 100,
         "wires": []
     },
     {
@@ -744,8 +704,8 @@
         "z": "1a7acb0f.16a335",
         "group": "830038c4.45ce28",
         "order": 1,
-        "width": "4",
-        "height": "3",
+        "width": 4,
+        "height": 3,
         "name": "Sensor 2",
         "icon": "",
         "label": "Sensor 2",
@@ -797,7 +757,7 @@
         "color": "",
         "bgcolor": "",
         "icon": "",
-        "payload": "{\"group\":{\"hide\":[\"Principal_Wattimetro\",\"Principal_Pressão\",\"Principal_Comandos\"],\"show\":[\"Principal_Sensor_1\",\"Principal_Sensor_2\",\"Principal_Sensor_3\",\"Principal_Sensor_4\",\"Principal_Sensor_5\",\"Principal_Sensor_6\"]}}",
+        "payload": "{\"group\":{\"hide\":[\"Sensores_Wattimetro\",\"Sensores_Pressão\",\"Sensores_Comandos\",\"Sensores_Desconectado\"],\"show\":[\"Sensores_Sensor_1\",\"Sensores_Sensor_2\",\"Sensores_Sensor_3\",\"Sensores_Sensor_4\",\"Sensores_Sensor_5\",\"Sensores_Sensor_6\"]}}",
         "payloadType": "json",
         "topic": "",
         "topicType": "str",
@@ -805,7 +765,8 @@
         "y": 260,
         "wires": [
             [
-                "80a3f20b.96f35"
+                "80a3f20b.96f35",
+                "c6b01592.82fde8"
             ]
         ]
     },
@@ -813,7 +774,7 @@
         "id": "87d0da39.dc23d8",
         "type": "ui_ui_control",
         "z": "1a7acb0f.16a335",
-        "name": "UI botoes",
+        "name": "UI control",
         "events": "all",
         "x": 180,
         "y": 580,
@@ -836,7 +797,7 @@
         "color": "",
         "bgcolor": "",
         "icon": "",
-        "payload": "{\"group\":{\"hide\":[\"Principal_Sensor_1\",\"Principal_Sensor_2\",\"Principal_Sensor_3\",\"Principal_Sensor_4\",\"Principal_Sensor_5\",\"Principal_Sensor_6\",\"Principal_Pressão\",\"Principal_Comandos\"],\"show\":[\"Principal_Wattimetro\"]}}",
+        "payload": "{\"group\":{\"hide\":[\"Sensores_Sensor_1\",\"Sensores_Sensor_2\",\"Sensores_Sensor_3\",\"Sensores_Sensor_4\",\"Sensores_Sensor_5\",\"Sensores_Sensor_6\",\"Sensores_Pressão\",\"Sensores_Comandos\"],\"show\":[\"Sensores_Wattimetro\"]}}",
         "payloadType": "json",
         "topic": "",
         "topicType": "str",
@@ -844,7 +805,8 @@
         "y": 380,
         "wires": [
             [
-                "fc51d520.ac0e08"
+                "fc51d520.ac0e08",
+                "a162dc61.550e"
             ]
         ]
     },
@@ -863,7 +825,7 @@
         "color": "",
         "bgcolor": "",
         "icon": "",
-        "payload": "{\"group\":{\"hide\":[\"Principal_Sensor_1\",\"Principal_Sensor_2\",\"Principal_Sensor_3\",\"Principal_Sensor_4\",\"Principal_Sensor_5\",\"Principal_Sensor_6\",\"Principal_Wattimetro\",\"Principal_Comandos\"],\"show\":[\"Principal_Pressão\"]}}",
+        "payload": "{\"group\":{\"hide\":[\"Sensores_Sensor_1\",\"Sensores_Sensor_2\",\"Sensores_Sensor_3\",\"Sensores_Sensor_4\",\"Sensores_Sensor_5\",\"Sensores_Sensor_6\",\"Sensores_Wattimetro\",\"Sensores_Comandos\",\"Sensores_Desconectado\"],\"show\":[\"Sensores_Pressão\"]}}",
         "payloadType": "json",
         "topic": "",
         "topicType": "str",
@@ -873,18 +835,6 @@
             [
                 "d4f2cc23.f7d11"
             ]
-        ]
-    },
-    {
-        "id": "92324005.9c458",
-        "type": "ui_ui_control",
-        "z": "1a7acb0f.16a335",
-        "name": "",
-        "events": "all",
-        "x": 1560,
-        "y": 420,
-        "wires": [
-            []
         ]
     },
     {
@@ -927,8 +877,8 @@
         "lineWidth": 3,
         "bgcolorFromTheme": true,
         "diffCenter": "",
-        "x": 1080,
-        "y": 840,
+        "x": 1280,
+        "y": 1040,
         "wires": []
     },
     {
@@ -936,7 +886,7 @@
         "type": "ui_artlessgauge",
         "z": "1a7acb0f.16a335",
         "group": "da231fcc.9f658",
-        "order": 2,
+        "order": 3,
         "width": 3,
         "height": 3,
         "name": "Pressão 2",
@@ -971,8 +921,8 @@
         "lineWidth": 3,
         "bgcolorFromTheme": true,
         "diffCenter": "10",
-        "x": 1080,
-        "y": 880,
+        "x": 1260,
+        "y": 1140,
         "wires": []
     },
     {
@@ -1386,7 +1336,13 @@
         "z": "1a7acb0f.16a335",
         "name": "Temp botão desativa sai",
         "links": [
-            "a3c0aa07.0c5148"
+            "a3c0aa07.0c5148",
+            "6c41b15d.2aefa",
+            "7991770b.1419d8",
+            "b72a4746.3ded78",
+            "e37b8e5b.9e373",
+            "e8ef256d.3ba0b8",
+            "85f0d3a0.ac4ed"
         ],
         "x": 335,
         "y": 260,
@@ -1398,7 +1354,8 @@
         "z": "1a7acb0f.16a335",
         "name": "Watt botão desativa sai",
         "links": [
-            "401e9813.874018"
+            "401e9813.874018",
+            "5c05ad2.b975054"
         ],
         "x": 335,
         "y": 380,
@@ -1459,7 +1416,8 @@
         "name": "Temp botão ativa sai",
         "links": [
             "401e9813.874018",
-            "959cba1a.116b18"
+            "959cba1a.116b18",
+            "5c05ad2.b975054"
         ],
         "x": 335,
         "y": 300,
@@ -1472,7 +1430,13 @@
         "name": "Watt botão ativa sai",
         "links": [
             "959cba1a.116b18",
-            "a3c0aa07.0c5148"
+            "a3c0aa07.0c5148",
+            "6c41b15d.2aefa",
+            "7991770b.1419d8",
+            "b72a4746.3ded78",
+            "e37b8e5b.9e373",
+            "e8ef256d.3ba0b8",
+            "85f0d3a0.ac4ed"
         ],
         "x": 335,
         "y": 420,
@@ -1485,7 +1449,14 @@
         "name": "Pressão botão ativa sai",
         "links": [
             "401e9813.874018",
-            "a3c0aa07.0c5148"
+            "a3c0aa07.0c5148",
+            "6c41b15d.2aefa",
+            "7991770b.1419d8",
+            "b72a4746.3ded78",
+            "e37b8e5b.9e373",
+            "e8ef256d.3ba0b8",
+            "85f0d3a0.ac4ed",
+            "5c05ad2.b975054"
         ],
         "x": 335,
         "y": 540,
@@ -1506,9 +1477,12 @@
             "51e6958a.40571c",
             "937afb68.cc6c58",
             "69ba5f56.e2e75",
-            "5253213.10464e"
+            "5253213.10464e",
+            "db7050fd.d5e0e",
+            "19c3924c.31da3e",
+            "46dab9bf.a24298"
         ],
-        "x": 75,
+        "x": 55,
         "y": 580,
         "wires": [
             [
@@ -1522,7 +1496,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 335,
         "y": 220,
@@ -1534,7 +1512,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 335,
         "y": 340,
@@ -1546,7 +1528,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 335,
         "y": 460,
@@ -1561,11 +1547,11 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 190,
+        "x": 210,
         "y": 80,
         "wires": []
     },
@@ -1576,7 +1562,8 @@
         "name": "DEBUG recebe",
         "links": [
             "668cc129.bf0b1",
-            "da123f8b.f9657"
+            "da123f8b.f9657",
+            "562e5ec.fe249a"
         ],
         "x": 95,
         "y": 80,
@@ -1584,22 +1571,6 @@
             [
                 "87d7f3aa.acdf2"
             ]
-        ]
-    },
-    {
-        "id": "390bce03.87d602",
-        "type": "function",
-        "z": "1a7acb0f.16a335",
-        "name": "",
-        "func": "flow.set('teste', \"iniciou\");\n\n//flow.get('botao_temp');\n//flow.get('botao_watt');\n//flow.get('botao_pressao');\n\n//msg.payload = flow.get('botao_temp');\nmsg.payload = flow.get('teste');\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "x": 560,
-        "y": 120,
-        "wires": [
-            []
         ]
     },
     {
@@ -1621,12 +1592,14 @@
         "once": true,
         "onceDelay": "1",
         "topic": "",
-        "payload": "{\"T\":[-127,-127,-127,-127,-127,-127],\"W\":-1,\"V\":-1,\"I\":-1,\"FP\":-1,\"Wh\":-1,\"freq\":-1,\"P1\":0,\"P2\":0,\"Bat\":0,\"TED\":5000,\"Gas\":0,\"bateriaMax\":0,\"bateriaMin\":5000}",
+        "payload": "{\"T\":[-127,-127,-127,-127,-127,-127],\"W\":-1,\"V\":-1,\"I\":-1,\"FP\":-1,\"Wh\":-1,\"freq\":-1,\"P1\":0,\"P2\":0,\"Bat\":0,\"TED\":2000,\"Gas\":0,\"bateriaMax\":0,\"bateriaMin\":5000}",
         "payloadType": "json",
-        "x": 370,
+        "x": 430,
         "y": 80,
         "wires": [
-            []
+            [
+                "a060cc15.fb1ca"
+            ]
         ]
     },
     {
@@ -1652,7 +1625,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 1175,
         "y": 200,
@@ -1664,7 +1641,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 1175,
         "y": 340,
@@ -1676,7 +1657,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 1175,
         "y": 260,
@@ -1688,7 +1673,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 1175,
         "y": 420,
@@ -1700,7 +1689,11 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 1175,
         "y": 500,
@@ -1712,22 +1705,14 @@
         "z": "1a7acb0f.16a335",
         "name": "UI envia para UI",
         "links": [
-            "3004b20.89c294e"
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
         ],
         "x": 1175,
         "y": 580,
-        "wires": []
-    },
-    {
-        "id": "5253213.10464e",
-        "type": "link out",
-        "z": "1a7acb0f.16a335",
-        "name": "UI envia para UI",
-        "links": [
-            "3004b20.89c294e"
-        ],
-        "x": 1215,
-        "y": 620,
         "wires": []
     },
     {
@@ -1810,7 +1795,7 @@
         "order": 3,
         "width": 0,
         "height": 0,
-        "format": "<script>\n(function(scope) {\n    scope.$watch('msg.payload', function(data) {\n        if (data == \"Node-RED\") {\n          window.open(\"https://www.nodered.org\");\n          //window.location.href = \"https://www.nodered.org\";\n        } \n        if (data == \"Grafana\") {\n          window.open(\"http://projetoifsc.duckdns.org:40090/d/MimCQDWRk/debug-projeto-tcc?orgId=1&refresh=5s\");\n          //window.location.href = \"https://github.com/node-red\";\n        } \n    });\n})(scope);\n</script>",
+        "format": "<script>\n(function(scope) {\n    scope.$watch('msg.payload', function(data) {\n        if (data == \"OTA\") {\n          window.open(\"http://projetoifsc.duckdns.org:40070/esp8266-ota\");\n          //window.location.href = \"https://www.nodered.org\";\n        } \n        if (data == \"Grafana\") {\n          window.open(\"http://projetoifsc.duckdns.org:40090/d/MimCQDWRk/debug-projeto-tcc?orgId=1&refresh=5s\");\n          //window.location.href = \"https://github.com/node-red\";\n        } \n    });\n})(scope);\n</script>",
         "storeOutMessages": false,
         "fwdInMessages": true,
         "resendOnRefresh": false,
@@ -1847,21 +1832,6 @@
         ]
     },
     {
-        "id": "617b8b2a.172164",
-        "type": "mqtt-check",
-        "z": "1a7acb0f.16a335",
-        "host": "localhost",
-        "port": "1883",
-        "username": "",
-        "password": "",
-        "name": "",
-        "x": 380,
-        "y": 640,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "511deb09.b99b24",
         "type": "inject",
         "z": "1a7acb0f.16a335",
@@ -1875,15 +1845,455 @@
                 "vt": "str"
             }
         ],
-        "repeat": "1",
+        "repeat": "0.5",
         "crontab": "",
         "once": false,
         "onceDelay": "1",
         "topic": "",
         "payload": "",
         "payloadType": "str",
-        "x": 570,
-        "y": 460,
+        "x": 790,
+        "y": 500,
+        "wires": [
+            [
+                "b1d987de.37b9e8",
+                "43b31019.c9944",
+                "c3264f12.5984c",
+                "367d0005.6d759",
+                "ad786165.2a2ed",
+                "eb041d34.a868f",
+                "20c4acce.512284",
+                "eef0ae54.837aa",
+                "175c8c9c.d7f1e3",
+                "b32afac5.136d48",
+                "fd4290e4.e0d55",
+                "5341d23a.fffc4c",
+                "609e499d.da1a58"
+            ]
+        ]
+    },
+    {
+        "id": "b1d987de.37b9e8",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "Bateria",
+        "func": "msg.payload = flow.get('bateria');\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1080,
+        "y": 100,
+        "wires": [
+            [
+                "6ca1df87.d4a75"
+            ]
+        ]
+    },
+    {
+        "id": "175c8c9c.d7f1e3",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "Tensão",
+        "func": "var controleUI = flow.get('Tensao');\nmsg.payload = flow.get('Tensao');\n\n//if (controleUI <= -1) {\n    //controleUI = {payload : {\"group\": {\"show\": [\"TCC_Wattimetro\",]}}}\n//    controleUI = {payload : {\"group\": {\"hide\": [\"Principal_Wattimetro\"],\n//    \"show\" : [\"Principal_Desconectado\"]   }}}\n//    return [msg, controleUI];\n//}\n\n//controleUI = {payload : {\"group\": {\"show\": [\"Principal_Wattimetro\",]}}}\n//    controleUI = {payload : {\"group\": {\"show\": [\"Principal_Wattimetro\"],\n//    \"hide\" : [\"Principal_Desconectado\"]   }}}\n    \nvar abilitar = flow.get('botao_watt');\n\nif (abilitar == true){\n    if (controleUI <= -1){\n    controleUI = {payload : {\"group\": {\"hide\": [\"Sensores_Wattimetro\"],\n    \"show\" : [\"Sensores_Desconectado\"]   }}}\n    return [msg, controleUI];  \n    } else {\n        controleUI = {payload : {\"group\": {\"show\": [\"Sensores_Wattimetro\"],\n        \"hide\" : [\"Sensores_Desconectado\"]   }}}\n    return [msg, controleUI];\n    }\n}\n\nif (abilitar == false){\n    controleUI = {\n        payload : {\n            \"group\": {\n                \"hide\": [\n                    \"Sensores_Wattimetro\",\n                    \"Sensores_Desconectado\"\n                ]\n            }\n        }\n    }\n    return [msg, controleUI];\n}\n    \n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1080,
+        "y": 720,
+        "wires": [
+            [
+                "5cdc2f0f.36ddc",
+                "28460232.ef01ee"
+            ],
+            [
+                "db7050fd.d5e0e"
+            ]
+        ],
+        "info": "É nessa função que é feito o controle de exibir a mensagem de wattimetro desconectado ou não."
+    },
+    {
+        "id": "db7050fd.d5e0e",
+        "type": "link out",
+        "z": "1a7acb0f.16a335",
+        "name": "UI envia para UI",
+        "links": [
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
+        ],
+        "x": 1175,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "28460232.ef01ee",
+        "type": "ui_text",
+        "z": "1a7acb0f.16a335",
+        "group": "5ea7efee.6fefb",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Wattimetro desconectado",
+        "label": "Wattímetro desconectado",
+        "format": "",
+        "layout": "row-spread",
+        "x": 1350,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "b32afac5.136d48",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "Corrente",
+        "func": "var controleUI = flow.get('Corrente');\nmsg.payload = flow.get('Corrente');\n\nif (controleUI <= -1) {\n    //controleUI = {payload : {\"group\": {\"hide\": [\"Principal_Wattimetro\",]}}}\n    //flow.set('Watt',0);\n    return msg;\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"Sensores_Wattimetro\",]}}}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1100,
+        "y": 800,
+        "wires": [
+            [
+                "2e2ecea9.8acc02"
+            ]
+        ]
+    },
+    {
+        "id": "fd4290e4.e0d55",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "Fator Potencia",
+        "func": "var controleUI = flow.get('FatorPotencia');\nmsg.payload = flow.get('FatorPotencia');\n\nif (controleUI <= -1) {\n    //controleUI = {payload : {\"group\": {\"hide\": [\"Principal_Wattimetro\",]}}}\n    //flow.set('Watt',0);\n    return msg;\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"Sensores_Wattimetro\",]}}}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1080,
+        "y": 860,
+        "wires": [
+            [
+                "a310cd57.7e3bc"
+            ]
+        ]
+    },
+    {
+        "id": "5341d23a.fffc4c",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "Watt Hora",
+        "func": "var controleUI = flow.get('WattHora');\nmsg.payload = flow.get('WattHora');\n\nif (controleUI <= -1) {\n    //controleUI = {payload : {\"group\": {\"hide\": [\"Principal_Wattimetro\",]}}}\n    //flow.set('Watt',0);\n    return msg;\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"Sensores_Wattimetro\",]}}}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1100,
+        "y": 920,
+        "wires": [
+            [
+                "42010708.b07dc8"
+            ]
+        ]
+    },
+    {
+        "id": "609e499d.da1a58",
+        "type": "function",
+        "z": "1a7acb0f.16a335",
+        "name": "Frequência",
+        "func": "var controleUI = flow.get('freq');\nmsg.payload = flow.get('freq');\n\nif (controleUI <= 0) {\n    //controleUI = {payload : {\"group\": {\"hide\": [\"Principal_Wattimetro\",]}}}\n    //flow.set('Watt',0);\n    return msg;\n}\n\ncontroleUI = {payload : {\"group\": {\"show\": [\"Sensores_Wattimetro\",]}}}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1090,
+        "y": 980,
+        "wires": [
+            [
+                "fcdcb99b.35ac48"
+            ]
+        ]
+    },
+    {
+        "id": "453b9962.aa7f18",
+        "type": "ui_button",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "group": "2e06e5e7fa74ac7d",
+        "order": 1,
+        "width": 7,
+        "height": 1,
+        "passthru": false,
+        "label": "Sensores",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "{\"tab\":\"Sensores\"}",
+        "payloadType": "json",
+        "topic": "",
+        "topicType": "str",
+        "x": 500,
+        "y": 300,
+        "wires": [
+            [
+                "46dab9bf.a24298"
+            ]
+        ]
+    },
+    {
+        "id": "4addb298.ed4a2c",
+        "type": "ui_button",
+        "z": "1a7acb0f.16a335",
+        "name": "",
+        "group": "2e06e5e7fa74ac7d",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Gráficos",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "{\"tab\":\"Gráficos\"}",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 500,
+        "y": 340,
+        "wires": [
+            [
+                "46dab9bf.a24298"
+            ]
+        ]
+    },
+    {
+        "id": "730bd2fa.68f1ec",
+        "type": "ui_button",
+        "z": "1a7acb0f.16a335",
+        "name": "Configurações",
+        "group": "2e06e5e7fa74ac7d",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Configurações",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "{\"tab\":\"Configurações\"}",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 520,
+        "y": 380,
+        "wires": [
+            [
+                "46dab9bf.a24298"
+            ]
+        ]
+    },
+    {
+        "id": "46dab9bf.a24298",
+        "type": "link out",
+        "z": "1a7acb0f.16a335",
+        "name": "UI envia para UI",
+        "links": [
+            "3004b20.89c294e",
+            "a21542f.2a4d9c",
+            "39c00a2c.077866",
+            "b86d9317.613c4",
+            "5350668a.de8928"
+        ],
+        "x": 635,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "c6b01592.82fde8",
+        "type": "link out",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas",
+        "links": [
+            "e177d2.4b64083",
+            "3a376f3.f60ee9",
+            "13b2dc02.c7c114",
+            "ae59e52c.be2cd8",
+            "b9f05679.2f3f38",
+            "b578cd45.ed73"
+        ],
+        "x": 275,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "e177d2.4b64083",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas sai",
+        "links": [
+            "c6b01592.82fde8"
+        ],
+        "x": 975,
+        "y": 160,
+        "wires": [
+            [
+                "43b31019.c9944"
+            ]
+        ]
+    },
+    {
+        "id": "3a376f3.f60ee9",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas sai",
+        "links": [
+            "c6b01592.82fde8"
+        ],
+        "x": 975,
+        "y": 240,
+        "wires": [
+            [
+                "367d0005.6d759"
+            ]
+        ]
+    },
+    {
+        "id": "13b2dc02.c7c114",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas sai",
+        "links": [
+            "c6b01592.82fde8"
+        ],
+        "x": 975,
+        "y": 320,
+        "wires": [
+            [
+                "c3264f12.5984c"
+            ]
+        ]
+    },
+    {
+        "id": "ae59e52c.be2cd8",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas sai",
+        "links": [
+            "c6b01592.82fde8"
+        ],
+        "x": 975,
+        "y": 400,
+        "wires": [
+            [
+                "ad786165.2a2ed"
+            ]
+        ]
+    },
+    {
+        "id": "b9f05679.2f3f38",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas sai",
+        "links": [
+            "c6b01592.82fde8"
+        ],
+        "x": 975,
+        "y": 480,
+        "wires": [
+            [
+                "eb041d34.a868f"
+            ]
+        ]
+    },
+    {
+        "id": "b578cd45.ed73",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group temperaturas sai",
+        "links": [
+            "c6b01592.82fde8"
+        ],
+        "x": 975,
+        "y": 560,
+        "wires": [
+            [
+                "20c4acce.512284"
+            ]
+        ]
+    },
+    {
+        "id": "a162dc61.550e",
+        "type": "link out",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group wattimetro",
+        "links": [
+            "3bd896c9.14400a"
+        ],
+        "x": 275,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "3bd896c9.14400a",
+        "type": "link in",
+        "z": "1a7acb0f.16a335",
+        "name": "atualiza group wattimetro sai",
+        "links": [
+            "a162dc61.550e"
+        ],
+        "x": 975,
+        "y": 720,
+        "wires": [
+            [
+                "175c8c9c.d7f1e3"
+            ]
+        ]
+    },
+    {
+        "id": "b69b24fe.540248",
+        "type": "ui_chart",
+        "z": "1a7acb0f.16a335",
+        "name": "Gráfico todos",
+        "group": "6800cd0d.185524",
+        "order": 1,
+        "width": "6",
+        "height": "4",
+        "label": "Todos os sensores",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "-20",
+        "ymax": "50",
+        "removeOlder": "1",
+        "removeOlderPoints": "200",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "x": 1550,
+        "y": 340,
         "wires": [
             []
         ]
@@ -2000,7 +2410,7 @@
         "tab": "2118dd5a.5f9512",
         "order": 1,
         "disp": false,
-        "width": "2",
+        "width": "3",
         "collapse": false
     },
     {
@@ -2095,20 +2505,50 @@
         "collapse": false
     },
     {
+        "id": "5ea7efee.6fefb",
+        "type": "ui_group",
+        "name": "Desconectado",
+        "tab": "2118dd5a.5f9512",
+        "order": 12,
+        "disp": false,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "2e06e5e7fa74ac7d",
+        "type": "ui_group",
+        "name": "Escolhas",
+        "tab": "f0fd52393ca33537",
+        "order": 1,
+        "disp": false,
+        "width": "7",
+        "collapse": false
+    },
+    {
+        "id": "6800cd0d.185524",
+        "type": "ui_group",
+        "name": "Temperatura",
+        "tab": "2a305549.fbb63a",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false
+    },
+    {
         "id": "2118dd5a.5f9512",
         "type": "ui_tab",
-        "name": "Principal",
+        "name": "Sensores",
         "icon": "assessment",
-        "order": 1,
+        "order": 2,
         "disabled": false,
         "hidden": false
     },
     {
         "id": "3aa764a3.9dd06c",
         "type": "ui_tab",
-        "name": "Comandos",
+        "name": "Configurações",
         "icon": "dashboard",
-        "order": 3,
+        "order": 4,
         "disabled": false,
         "hidden": false
     },
@@ -2117,7 +2557,16 @@
         "type": "ui_tab",
         "name": "Gráficos",
         "icon": "dashboard",
-        "order": 2,
+        "order": 3,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "f0fd52393ca33537",
+        "type": "ui_tab",
+        "name": "Inicio",
+        "icon": "dashboard",
+        "order": 1,
         "disabled": false,
         "hidden": false
     }
