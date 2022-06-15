@@ -23,6 +23,7 @@ long tempo_debug_mqtt = 0;
 /* Semáforos */
 // SemaphoreHandle_t xDebug_semaphore; // Usado inicialmente, alterado para mutex
 static SemaphoreHandle_t mutex; // O semáforo do tipo mutex indica para o scheduler que o intervalo entre take e give possui prioridade máxima, ignorando o nível de prioridade das tasks.
+static SemaphoreHandle_t mutexWifi; // Mutex para ativar ou suspender tasks que dependem da conexão WiFi
 static SemaphoreHandle_t mutexMQTT; // Mutex para lidar com as chamadas do client. Algumas funções da biblioteca MQTT podem demorar para serem respondidas.
 // Variáveis globais utilizadas estão no "Variaveis.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +148,7 @@ void atualizacao_OTA(){
 
 void wifi(){
   
+    Serial.println("loop Wifi");
     if(!wifiManager.autoConnect("ESP_AP", "testeesp")){
        wifiManager.startConfigPortal("ESP_AP", "testeesp"); // Caso perca a conexão, abilita novamente o AP pra ser conectado pelo celular e configurar/logar em nova rede WiFi.
     wifiManager.process(); // Ativa a página do portal, pra verificar o wifi, desconectar, update do firmware, reset da ESP  
@@ -182,21 +184,25 @@ void reconnect() {
 // Receber mensagens do tópico MQTT assinado. Essa função é enviada como parâmetro na função client.loop, da biblioteca do MQTT. Lá ele carrega os dados no payload caso haja msg nova.
 void callback(char* topic, byte* payload, unsigned int length) {
   
-  Serial.println();
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
+  //Serial.println();
+  //Serial.print("Message arrived [");
+  //Serial.print(topic);
+  //Serial.print("] ");
   for (int i = 0; i < length; i++) {
     comandos_recebidos[i] = payload[i];
-    Serial.print((char)payload[i]);
+    //Serial.print((char)payload[i]);
   }
   Serial.println();
   // Só deserializa se chegar nova mensagem.
   deserializeJson(JSON_recebe_comandos, comandos_recebidos); // Deserializa a msg recebida e joga no objeto JSON.
 
   tipo_gas = JSON_recebe_comandos["Gas"];
-  Serial.println(tempo_task_enviar_dados);
-  Serial.println(tipo_gas);
+  resetar_wifi = JSON_recebe_comandos["rst"];
+  //Serial.print("Callback loop dados recebidos: ");
+  //Serial.println(resetar_wifi);
+
+  //Serial.println(tempo_taskDelay_enviar_dados);
+  //Serial.println(tipo_gas);
 
 }
 
@@ -237,8 +243,11 @@ void temperatura(){
         sensortemp.getAddress(Thermometer, n); // Pega o endereço de cada sensor conectado.
         //Temps[n] = sensortemp.getTempC(Thermometer); // Pega a temperatura já convertida para Celsius e grava na posição do sensor no pino no vetor correspondente.
         xSemaphoreTake(mutex, portMAX_DELAY);
-        JSON_envia_dados["T"][n] = sensortemp.getTempC(Thermometer);; // Grava o valor da temperatura no vetor do JSON da temperatura.
+        JSON_envia_dados["T"][n] = sensortemp.getTempC(Thermometer); // Grava o valor da temperatura no vetor do JSON da temperatura.
         xSemaphoreGive(mutex);
+        //Serial.print(n);
+        //Serial.print(" temperatura: ");
+        //Serial.println(sensortemp.getTempC(Thermometer));
       }
 
       if (!sensores_conectados[n]) { // Se no n específico, não tiver um sensor conectado, entra na condição. 
@@ -314,52 +323,85 @@ void wattimetro(){
 
 void conexoes_wireless(void *pvParameters){
 
-  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task.
+  const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_conexoes_wireless); // Transforma o tempo de delay de milissegundos para tickets.
+  TickType_t xLastWakeTime; // Variável para pegar os tickets do scheduler do FreeRTOS.
+  float tempo_ant; // Variável pra calcular o tempo de execução da Task.
+  float tempo_execucao_Task; // Variável do tempo de execução que a Task levou para ser completada.
 
   for (;;){
-    float tempo_ant = millis();
+
+    xLastWakeTime = xTaskGetTickCount();
+    tempo_ant = millis();
+
+    //Serial.println("Task conexoes_wireless em execução");
 
     bool conexao_mqtt;
 
     // Se perder a conexão WiFi, tenta reconectar.
     if (WiFi.status() != WL_CONNECTED && ativar_wifi == true){
-      Serial.println("desconectado");
+      xSemaphoreTake(mutexWifi, portMAX_DELAY );
+      Serial.println("desconectado");         
       wifi();
     }
-    
+
+    while (WiFi.status() != WL_CONNECTED && ativar_wifi == true){
+      wifiManager.process();
+      delay(200); // A função delay implementada na API do ESP32 é tratado internamente como vTaskDelay
+    }
+
     if (WiFi.status() == WL_CONNECTED){
+      xSemaphoreGive(mutexWifi);
+      //Serial.println("conectado");
       //wifiManager.stopConfigPortal();
       //wifiManager.stopWebPortal();
       //atualizacao_OTA();      
+      
       xSemaphoreTake(mutexMQTT, portMAX_DELAY );
-      conexao_mqtt = client.connected();
+      conexao_mqtt = client.connected();      
       xSemaphoreGive(mutexMQTT);
+
       if (!conexao_mqtt) {
-        reconnect(); // Se perder a conexão com o broker MQTT, tenta reconectar.               
-      }      
+        reconnect(); // Se perder a conexão com o broker MQTT, tenta reconectar.   
+        client.subscribe("comandosTCC"); // Dar subscribe no tópico que envia os comandos do NodeRed para cá. 
+        //Serial.println("testando se conexão MQTT está ativa");          
+      }
+
       server.handleClient(); // Escutar a porta do webserver para atualização via OTA.
     }
 
-
     /* Obtém o High Water Mark da task atual.
-    Lembre-se: tal informação é obtida em words! */
+    A informação é obtida em words! */
     //uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 
     float tempo_dep = millis();
+    tempo_execucao_Task = tempo_dep - tempo_ant;
     xSemaphoreTake(mutex, portMAX_DELAY );
-    tempo_conexoes_wireless = tempo_dep - tempo_ant;
+    tempo_conexoes_wireless = tempo_execucao_Task;
     xSemaphoreGive(mutex);
 
-    vTaskDelay(tempo_task_conexoes_wireless / portTICK_PERIOD_MS);
+    // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+    //vTaskDelay((tempo_taskDelay_conexoes_wireless) / portTICK_PERIOD_MS);
   }
 }
 
 void enviar_dados(void *pvParameters){
 
-  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task.
+  const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_enviar_dados); // Transforma o tempo de delay de milissegundos para tickets
+  TickType_t xLastWakeTime; // Variável para pegar os tickets do scheduler do FreeRTOS.
+  float tempo_ant; // Variável pra calcular o tempo de execução da Task.
+  float tempo_execucao_Task; // Variável do tempo de execução que a Task levou para ser completada.
 
   for(;;){
-    float tempo_ant = millis(); 
+
+    xSemaphoreTake(mutexWifi, portMAX_DELAY );
+    xSemaphoreGive(mutexWifi);
+
+    xLastWakeTime = xTaskGetTickCount();
+    tempo_ant = millis(); 
+
+
+    //Serial.println("Task enviar_dados em execução");
 
     // Usando semáforo pois o JSON está sendo usada em duas tasks com tempos de execução e prioridades diferentes.
       xSemaphoreTake(mutex, portMAX_DELAY );
@@ -372,44 +414,78 @@ void enviar_dados(void *pvParameters){
 
     /* Obtém o High Water Mark da task atual.
    Lembre-se: tal informação é obtida em words! */
-   // uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-
-    float tempo_dep = millis();
+   // uxHighWaterMark = uxTaskGetStackHighWaterMark( NULtempo_jitter = tempo_dep - tempo_ant;
     xSemaphoreTake(mutex, portMAX_DELAY );
-    tempo_enviar_dados = tempo_dep - tempo_ant;
+    tempo_enviar_dados = tempo_execucao_Task;
     xSemaphoreGive(mutex);
 
-    vTaskDelay(tempo_task_enviar_dados/portTICK_PERIOD_MS);
+    // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+    //vTaskDelay((tempo_taskDelay_enviar_dados - tempo_execucao_Task)/portTICK_PERIOD_MS);
   }
 
 }
 
 void receber_comandos(void *pvParameters){
 
+  const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_receber_comandos); // Transforma o tempo de delay de milissegundos para tickets
+  TickType_t xLastWakeTime; // Variável para pegar os tickets do scheduler do FreeRTOS.
+  float tempo_ant; // Variável pra calcular o tempo de execução da Task.
+  float tempo_execucao_Task; // Variável do tempo de execução que a Task levou para ser completada.
+
   for(;;){
-    float tempo_ant = millis();
+
+    xSemaphoreTake(mutexWifi, portMAX_DELAY );
+    xSemaphoreGive(mutexWifi);
+
+    xLastWakeTime = xTaskGetTickCount();
+    tempo_ant = millis();
+
+    //Serial.println("Task receber_comandos em execução");
+   
 
     xSemaphoreTake(mutexMQTT, portMAX_DELAY );
     if (client.connected() && WiFi.status() == WL_CONNECTED) client.loop(); // Função para verificar se existe mensagem nova no subscriber do MQTT e já grava os dados na variável comandos_recebidos.
     xSemaphoreGive(mutexMQTT);
- 
+
+    // teste comando resetar wifi
+    if(resetar_wifi){
+      wifiManager.resetSettings(); 
+      //vTaskResume( xHandle_conexoes_wireless );
+      xTaskNotifyGive( xHandle_conexoes_wireless );
+      }
+    resetar_wifi = false;
+
     float tempo_dep = millis();  
 
+    tempo_execucao_Task = tempo_dep - tempo_ant;
     xSemaphoreTake(mutex, portMAX_DELAY );
-    tempo_receber_comandos = tempo_dep - tempo_ant;
+    tempo_receber_comandos = tempo_execucao_Task;
     xSemaphoreGive(mutex);
 
-    vTaskDelay(tempo_task_receber_comandos/portTICK_PERIOD_MS); 
+    // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
+    vTaskDelayUntil(&xLastWakeTime, xDelay);  
+    //vTaskDelay((tempo_taskDelay_receber_comandos - tempo_execucao_Task)/portTICK_PERIOD_MS); 
     
   }
 }
 
 void ler_sensores(void *pvParameters){
 
-  //UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
+  const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_ler_sensores); // Transforma o tempo de delay de milissegundos para tickets
+  TickType_t xLastWakeTime; // Variável para pegar os tickets do scheduler do FreeRTOS.
+  float tempo_ant; // Variável pra calcular o tempo de execução da Task.
+  float tempo_execucao_Task; // Variável do tempo de execução que a Task levou para ser completada.
 
   for(;;){
-    float tempo_ant = millis();
+
+    xSemaphoreTake(mutexWifi, portMAX_DELAY );
+    xSemaphoreGive(mutexWifi);
+    
+    xLastWakeTime = xTaskGetTickCount();    
+    tempo_ant = millis();
+
+    //Serial.println("Task ler_sensores em execução");
 
     indice_bateria();
     temperatura();
@@ -421,22 +497,35 @@ void ler_sensores(void *pvParameters){
     //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
     
     float tempo_dep = millis();
+    tempo_execucao_Task = tempo_dep - tempo_ant;
     xSemaphoreTake(mutex, portMAX_DELAY );
-    tempo_ler_sensores = tempo_dep - tempo_ant;
+    tempo_ler_sensores = tempo_execucao_Task;
     xSemaphoreGive(mutex);
 
-    vTaskDelay(tempo_task_ler_sensores/portTICK_PERIOD_MS);
+    // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+    //vTaskDelay((tempo_taskDelay_ler_sensores - tempo_execucao_Task)/portTICK_PERIOD_MS);
   }
 }
 
 void Debug_MQTT(void *pvParameters){
 
+  const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_debug_mqtt); // Transforma o tempo de delay de milissegundos para tickets
+  TickType_t xLastWakeTime; // Variável para pegar os tickets do scheduler do FreeRTOS.
+  float tempo_ant; // Variável pra calcular o tempo de execução da Task.
+  float tempo_execucao_Task; // Variável do tempo de execução que a Task levou para ser completada.
+
   UBaseType_t uxHighWaterMark; // Variável para identificar o consumo máximo de memória de uma task
 
   for(;;){
-    float tempo_ant = millis();
 
-    //if (!client.connected()) reconnect(); // Caso não esteja conectado no broker MQTT, tenta reconectar.
+    xSemaphoreTake(mutexWifi, portMAX_DELAY );
+    xSemaphoreGive(mutexWifi);
+
+    xLastWakeTime = xTaskGetTickCount(); 
+    tempo_ant = millis();
+
+    //Serial.println("Task Debug_MQTT em execução");
 
     uxHighWaterMark = uxTaskGetStackHighWaterMark(xHandle_enviar_dados);
     JSON_DEBUG_MQTT["Size_enviar_dados"] = (stack_size_enviar_dados - uxHighWaterMark);
@@ -471,7 +560,9 @@ void Debug_MQTT(void *pvParameters){
     float tempo_dep = millis();   
     tempo_debug_mqtt = tempo_dep - tempo_ant;
 
-    vTaskDelay(tempo_task_debug_mqtt/portTICK_PERIOD_MS); 
+    // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+    //vTaskDelay((tempo_taskDelay_debug_mqtt - tempo_debug_mqtt)/portTICK_PERIOD_MS); 
     
   }
 }
@@ -503,7 +594,7 @@ void setup(){
   JSON_envia_dados["P1"] = P1; // Sensor de pressão 1. Está no GPIO 35
   JSON_envia_dados["P2"] = P2; // Sensor de pressão 2. Está no GPIO 34
   JSON_envia_dados["Bat"] = percentual_bateria; // Percentual da bateria
-  JSON_envia_dados["TED"] = tempo_task_enviar_dados; // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem.
+  JSON_envia_dados["TED"] = tempo_taskDelay_enviar_dados; // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem.
   JSON_envia_dados["Gas"] = tipo_gas; // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem.
 
   interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
@@ -512,22 +603,22 @@ void setup(){
   sensortemp.begin(); // Inicialização dos DS18B20.
 
   //////////////
+  resetar_wifi = false;
   //setup_wifi(); // Configura o WiFi, caso não esteja usando o WiFi Manager.
   //wifiManager.erase();
   //wifiManager.resetSettings();
 
-   // Create mutex before starting tasks
-  mutex = xSemaphoreCreateMutex();
-  mutexMQTT = xSemaphoreCreateMutex();
-  //xDebug_semaphore = xSemaphoreCreateMutex(); // Criação do semáforo.
+  mutex = xSemaphoreCreateMutex(); // Cria mutex para variáveis compartilhadas entre as tasks.
+  //mutexWifi = xSemaphoreCreateBinary();
+  mutexWifi = xSemaphoreCreateMutex(); // Cria mutex para controle das tasks ativas ou esperando liberação. A tasks conexoes_wireless controla a liberação ou não conforme conexão WiFi ativa.
+  mutexMQTT = xSemaphoreCreateMutex(); // Cria mutex para uso nas funções da biblioteca MQTT usada para enviar ou receber dados dos tópicos no broker MQTT.
 
   wifiManager.setConfigPortalBlocking(false); // Não deixa que o WiFiManager bloqueie a execução enquanto não estiver conectado em nada.
   wifiManager.setWiFiAutoReconnect(true); // Permite a reconexão em rede WiFi, caso perca a conexão momentaneamente.
   wifiManager.setDebugOutput(false); // Desabilita as saídas impressas no serial.
 
-  xSemaphoreTake(mutex, portMAX_DELAY ); // Testando mutex aqui para verificar se continua crashando a ESP.
   wifiManager.autoConnect("ESP_AP", "testeesp");
-  xSemaphoreGive(mutex);
+
   delay(100); // Delay para aguardar configurações do cliente WiFi
   //wifiManager.startWebPortal();
 
@@ -536,25 +627,33 @@ void setup(){
 
   client.setBufferSize(MSG_BUFFER_SIZE); // Setar o tamanho do buffer do payload mqtt.
   client.setServer(mqtt_server, 1883);  // Seta o servidor MQTT (Broker) e a porta (porta padrão).
-  //client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT.
+  client.setCallback(callback); // Seta a função para receber mensagens do tópico no broker MQTT.
   // if (!client.connected()) { // Conecta no broker MQTT.
   // //Serial.println("4");
   //   reconnect();
   //   //Serial.println("5");
   // }
-  client.subscribe("comandosTCC"); // Dar subscribe no tópico que envia os comandos do NodeRed para cá.
+  
   //////////////
 
   pzem.resetEnergy(); // Reseta as informações salvas internamente no PZEM, como o Wh.
 
-  
+  xTaskCreate(
+    conexoes_wireless,      // Função a ser chamada
+    "Conexoes wireless",    // Nome da tarefa
+    stack_size_conexoes_wireless,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
+    NULL,               // Parametro a ser passado
+    3,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    &xHandle_conexoes_wireless               // Task handle
+    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
+  );
 
   xTaskCreate(
     enviar_dados,      // Função a ser chamada
     "Enviar dados",    // Nome da tarefa
     stack_size_enviar_dados,              // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
     NULL,              // Parametro a ser passado
-    4,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    1,                 // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     &xHandle_enviar_dados               // Task handle
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
   );
@@ -564,7 +663,7 @@ xTaskCreate(
     "Receber comandos",    // Nome da tarefa
     stack_size_receber_comandos,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
     NULL,               // Parametro a ser passado
-    3,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     &xHandle_receber_comandos               // Task handle
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
 );
@@ -574,18 +673,8 @@ xTaskCreate(
     "Ler dados",    // Nome da tarefa
     stack_size_ler_sensores,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
     NULL,               // Parametro a ser passado
-    2,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    1,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     &xHandle_ler_sensores              // Task handle
-    //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
-  );
-
-  xTaskCreate(
-    conexoes_wireless,      // Função a ser chamada
-    "Conexoes wireless",    // Nome da tarefa
-    stack_size_conexoes_wireless,               // Tamanho (bytes) This stack size can be checked & adjusted by reading the Stack Highwater
-    NULL,               // Parametro a ser passado
-    5,                  // Prioridade da tarefa Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    &xHandle_conexoes_wireless               // Task handle
     //0,          // Núcleo que deseja rodar a tarefa (0 or 1)
   );
   
@@ -603,7 +692,6 @@ xTaskCreate(
    //Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram());
    //Serial.printf("ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion());
    //Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
-
 }
 
 void loop() {

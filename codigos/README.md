@@ -1,5 +1,10 @@
 # TCC2
 
+Versão 0.61
+
+- Todas as tasks com execução gerenciada por semáforo na Task conexoes_wireless, usando semáforos do tipo mutex. Se não tiver conexão WiFi ativa, a task conexoes_wireless toma o semáforo para si, colocando em loop o wifi manager e travando a execução das outras tasks.
+- Intervalo de execução das Tasks modificado para vDelayUntil para diminuir o jitter de execução. 
+
 Versão 0.60
 
 - Substituição dos semáforos binários por mutex. E adicionado 2 mutex: um para dados de variáveis compartilhadas entre as tasks e outro para acesso ao objeto MQTT com criação/connect e consultas de conexão.
