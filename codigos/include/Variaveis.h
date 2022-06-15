@@ -28,16 +28,16 @@ DynamicJsonDocument JSON_DEBUG_MQTT(300);
 char DEBUG_MQTT[300]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
 
 // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem:
-static long tempo_task_enviar_dados = 5000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 5000 milisegundos por padrão.
-static long tempo_task_receber_comandos = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
-static long tempo_task_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
-static long tempo_task_conexoes_wireless = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
-static long tempo_task_debug_mqtt = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
+static long tempo_taskDelay_enviar_dados = 2000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 2000 milisegundos por padrão.
+static long tempo_taskDelay_receber_comandos = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
+static long tempo_taskDelay_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
+static long tempo_taskDelay_conexoes_wireless = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
+static long tempo_taskDelay_debug_mqtt = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
 // Tamanho da memoria alocada para as respectivas Tasks:
 static int stack_size_enviar_dados = 2000; 
 static int stack_size_receber_comandos = 2000;
 static int stack_size_ler_sensores = 2000;
-static int stack_size_conexoes_wireless = 2000;
+static int stack_size_conexoes_wireless = 3000;
 static int stack_size_debug_mqtt = 3000;
 
 // Variáveis sensores de temperatura. DS18B20 range: -55°C a +125°C. Valores iniciados com -127 pois é o valor padrão da biblioteca caso sensor esteja desconectado.
@@ -87,7 +87,9 @@ const int porta_bateria = 32;
 
 unsigned long tempo_db_Pinos_temp = 300; // Tempo do debouncer das portas dos sensores de temperatura, em milisegundos.
 
+// Comandos recebidos pelo Node-Red UI via WiFi
 unsigned int tipo_gas = 0; // Tipo de gás escolhido pelo operador. 
+static bool resetar_wifi = false;
 
 
 ///////////////// Variáveis OTA //////////////////////////
