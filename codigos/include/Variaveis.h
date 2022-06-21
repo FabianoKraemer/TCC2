@@ -19,13 +19,13 @@ PubSubClient client(WifiClient); // Criação do objeto MQTT
 unsigned long tempoMsg = 0;
 
 #define MSG_BUFFER_SIZE	(300) // Declaração do tamanho do buffer da mensagem MQTT
-const int capacity = JSON_OBJECT_SIZE(MSG_BUFFER_SIZE);
-StaticJsonDocument<capacity> JSON_envia_dados; // Objeto JSON que recebe os dados dos sensores e é serializado para envio pelo MQTT.
-char dados_envio[capacity]; // Array char das leituras dos sensores, enviado para o publisher MQTT.
-DynamicJsonDocument JSON_recebe_comandos(100);
+const static int tamanhoJSON = JSON_OBJECT_SIZE(MSG_BUFFER_SIZE);
+StaticJsonDocument<tamanhoJSON> JSON_envia_dados; // Objeto JSON que recebe os dados dos sensores e é serializado para envio pelo MQTT.
+char dados_envio[tamanhoJSON]; // Array char das leituras dos sensores, enviado para o publisher MQTT.
+StaticJsonDocument<100> JSON_recebe_comandos;
 char comandos_recebidos[100]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
-DynamicJsonDocument JSON_DEBUG_MQTT(300);
-char DEBUG_MQTT[300]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
+StaticJsonDocument<MSG_BUFFER_SIZE> JSON_DEBUG_MQTT;
+char DEBUG_MQTT[tamanhoJSON]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
 
 // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem:
 static long tempo_taskDelay_enviar_dados = 2000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 2000 milisegundos por padrão.
