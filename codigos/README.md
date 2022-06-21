@@ -1,5 +1,9 @@
 # TCC2
 
+Versão 0.62
+
+- Alterações no main
+
 Versão 0.61
 
 - Todas as tasks com execução gerenciada por semáforo na Task conexoes_wireless, usando semáforos do tipo mutex. Se não tiver conexão WiFi ativa, a task conexoes_wireless toma o semáforo para si, colocando em loop o wifi manager e travando a execução das outras tasks.

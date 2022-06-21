@@ -28,6 +28,10 @@ static SemaphoreHandle_t mutexMQTT; // Mutex para lidar com as chamadas do clien
 // Variáveis globais utilizadas estão no "Variaveis.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Filas
+QueueHandle_t fila_JSON_sensores; // Fila do JSON dos sensores
+const static uint8_t tamanho_fila_JSON_sensores = 1; // Tamanho da fila dos dados JSON
+
 Interrupcoes interrupt(tempo_db_Pinos_temp); // Objeto das interrupções dos GPIOs dos sensores de temperatura.
 
 void atualizacao_OTA(){
@@ -487,11 +491,13 @@ void ler_sensores(void *pvParameters){
 
     //Serial.println("Task ler_sensores em execução");
 
+    // testar lock/semafóro aqui
     indice_bateria();
     temperatura();
     pressao();
     wattimetro();
-
+    // testar lock/semafóro aqui
+    
     /* Obtém o High Water Mark da task atual.
     Lembre-se: tal informação é obtida em words! */
     //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
@@ -612,6 +618,9 @@ void setup(){
   //mutexWifi = xSemaphoreCreateBinary();
   mutexWifi = xSemaphoreCreateMutex(); // Cria mutex para controle das tasks ativas ou esperando liberação. A tasks conexoes_wireless controla a liberação ou não conforme conexão WiFi ativa.
   mutexMQTT = xSemaphoreCreateMutex(); // Cria mutex para uso nas funções da biblioteca MQTT usada para enviar ou receber dados dos tópicos no broker MQTT.
+
+  // Criando a fila para escrita e leitura no JSON dos dados dos sensores
+  fila_JSON_sensores = xQueueCreate(tamanho_fila_JSON_sensores, sizeof(JSON_envia_dados));
 
   wifiManager.setConfigPortalBlocking(false); // Não deixa que o WiFiManager bloqueie a execução enquanto não estiver conectado em nada.
   wifiManager.setWiFiAutoReconnect(true); // Permite a reconexão em rede WiFi, caso perca a conexão momentaneamente.
