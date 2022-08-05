@@ -21,10 +21,11 @@ long tempo_receber_comandos = 0;
 long tempo_debug_mqtt = 0;
 
 /* Semáforos */
-// SemaphoreHandle_t xDebug_semaphore; // Usado inicialmente, alterado para mutex
-static SemaphoreHandle_t mutex; // O semáforo do tipo mutex indica para o scheduler que o intervalo entre take e give possui prioridade máxima, ignorando o nível de prioridade das tasks.
-static SemaphoreHandle_t mutexWifi; // Mutex para ativar ou suspender tasks que dependem da conexão WiFi
-static SemaphoreHandle_t mutexMQTT; // Mutex para lidar com as chamadas do client. Algumas funções da biblioteca MQTT podem demorar para serem respondidas.
+// SemaphoreHandle_t xDebug_semaphore; // Usado inicialmente, alterado para mutex.
+// O semáforo do tipo mutex indica para o scheduler que o intervalo entre take e give possui prioridade máxima, ignorando o nível de prioridade das tasks.
+static SemaphoreHandle_t mutexJSON; // Mutex que protege o acesso ao objeto JSON.
+static SemaphoreHandle_t mutexWifi; // Mutex para ativar ou suspender tasks que dependem das conexão WiFi e Bluetooth.
+static SemaphoreHandle_t mutexMQTT; // Mutex para lidar com as chamadas do client do MQTT. Algumas funções da biblioteca MQTT podem demorar para serem respondidas.
 // Variáveis globais utilizadas estão no "Variaveis.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -220,47 +221,73 @@ void indice_bateria(){
   if (bateriaMax >= percentual_bateria) bateriaMax = percentual_bateria; // Salva o maior valor encontrado na leitura da carga da bateria.
   if (bateriaMin <= percentual_bateria) bateriaMin = percentual_bateria; // Salva o menor valor encontrado na leitura da carga da bateria.
 
-  xSemaphoreTake(mutex, portMAX_DELAY);
+  xSemaphoreTake(mutexJSON, portMAX_DELAY);
   JSON_envia_dados["bateriaMax"] = bateriaMax;
   JSON_envia_dados["bateriaMin"] = bateriaMin;
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(mutexJSON);
 
   int indiceBateria = map(percentual_bateria, 2800, 4094, 0, 100); // Mapeia os valores lidos para o intervalo de 0 a 100, para ficar em percentual.
 
   if (indiceBateria <= 0) indiceBateria = 0; // Caso ocorra alguma leitura menor que 2800 antes do map, fica valor negativo, estabelece o valor 0 para que não ocorra isso.
   else if (indiceBateria >= 100) indiceBateria = 100; // Caso o valor lido tenha ficado maior que 4094, para não dar valor maior que 100, estabelece esse limite. 
 
-  xSemaphoreTake(mutex, portMAX_DELAY);
+  xSemaphoreTake(mutexJSON, portMAX_DELAY);
   JSON_envia_dados["Bat"] = indiceBateria;
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(mutexJSON);
 }
 
 void temperatura(){
     
     interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
     interrupt.retorna_vetor(sensores_conectados); // Verifica quais portas estão com algo conectado ou não. True para conectado, false para desconectado.
-
+   
     sensortemp.requestTemperatures(); // Adiciona pelo menos meio segundo de tempo de processamento, mas varia muito.
-
+  
     for (int n = 0; n <= 5; n++){
+      
       if (sensores_conectados[n]) { // Se no n específico, tiver um sensor conectado, entrará na condição para pegar o endereço do sensor e medir a temperatura.
         sensortemp.getAddress(Thermometer, n); // Pega o endereço de cada sensor conectado.
         //Temps[n] = sensortemp.getTempC(Thermometer); // Pega a temperatura já convertida para Celsius e grava na posição do sensor no pino no vetor correspondente.
-        xSemaphoreTake(mutex, portMAX_DELAY);
-        JSON_envia_dados["T"][n] = sensortemp.getTempC(Thermometer); // Grava o valor da temperatura no vetor do JSON da temperatura.
-        xSemaphoreGive(mutex);
+        xSemaphoreTake(mutexJSON, portMAX_DELAY);
+        Temps[n] = sensortemp.getTempC(Thermometer); // Grava o valor da temperatura no vetor do JSON da temperatura. 
+        //Serial.print("Temperatura Sensor ");
+        //Serial.print(n);
+        //Serial.print(", com addres: ");
+        //Serial.println(Temps[n]);
+        //JSON_envia_dados["T"][n] = sensortemp.getTempC(Thermometer); // Grava o valor da temperatura no vetor do JSON da temperatura.
+        xSemaphoreGive(mutexJSON);
         //Serial.print(n);
         //Serial.print(" temperatura: ");
         //Serial.println(sensortemp.getTempC(Thermometer));
       }
 
+
       if (!sensores_conectados[n]) { // Se no n específico, não tiver um sensor conectado, entra na condição. 
         //Temps[n] = -127; // Gravará o valor -127. Esse valor é padrão na biblioteca da Dallas para sensor não conectado.
-        xSemaphoreTake(mutex, portMAX_DELAY);
-        JSON_envia_dados["T"][n] = -127; // Grava o valor da temperatura no vetor do JSON da temperatura.
-        xSemaphoreGive(mutex);
+        xSemaphoreTake(mutexJSON, portMAX_DELAY);
+        Temps[n] = -127; // Grava o valor da temperatura no vetor do JSON da temperatura.
+        //JSON_envia_dados["T"][n] = -127; // Grava o valor da temperatura no vetor do JSON da temperatura.
+        xSemaphoreGive(mutexJSON);
       }
     }
+
+
+
+    //Serial.println(Temps[0]);
+    //Serial.println(Temps[1]);
+    //Serial.println(Temps[2]);
+    //Serial.println(Temps[3]);
+    //Serial.println(Temps[4]);
+    //Serial.println(Temps[5]);
+    Serial.println("-------------");
+
+  JSON_envia_dados["T1"] = Temps[0]; 
+  JSON_envia_dados["T2"] = Temps[1]; 
+  JSON_envia_dados["T3"] = Temps[2];  
+  JSON_envia_dados["T4"] = Temps[3]; 
+  JSON_envia_dados["T5"] = Temps[4]; 
+  JSON_envia_dados["T6"] = Temps[5]; 
+
 }
 
 void pressao(){
@@ -272,9 +299,9 @@ void pressao(){
     i++;
   }
   // P1 = P1 / 50; // Tira a média das 50 leituras.
-  xSemaphoreTake(mutex, portMAX_DELAY);
+  xSemaphoreTake(mutexJSON, portMAX_DELAY);
   JSON_envia_dados["P1"] = (P1 / 50);
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(mutexJSON);
   P1 = (P1 * 0.1875) / 1000; // Obter tensão.
   P1 = (P1 * 30 - 19.8) / 2.64; // fórmula obtida fazendo uma matriz com 0 bar a 30 bar e 0,66V a 3.3V. Valor do 21.8 na formula é 19.8, foi acrescentado 1 para correção das variações e ficar o mesmo valor do manômetro
 
@@ -285,9 +312,9 @@ void pressao(){
     i++;
   }
   //P2 = P2 / 50; // Tira a média das 50 leituras.
-  xSemaphoreTake(mutex, portMAX_DELAY);
+  xSemaphoreTake(mutexJSON, portMAX_DELAY);
   JSON_envia_dados["P2"] = (P2 / 50);
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(mutexJSON);
   P2 = (P2 * 0.1875) / 1000; // Obter tensão.
   P2 = (P2 * 10 - 6.6) / 2.64; // Fórmula obtida fazendo uma matriz com 0 bar a 10 bar e 0,66V a 3.3V.
 
@@ -314,14 +341,14 @@ void wattimetro(){
   if (isnan(Wh)) Wh = -1;
   if (isnan(Freq)) Freq = -1;
 
-  xSemaphoreTake(mutex, portMAX_DELAY);
+  xSemaphoreTake(mutexJSON, portMAX_DELAY);
   JSON_envia_dados["W"] = W; // potência Watts
   JSON_envia_dados["V"] = V; // tensão
   JSON_envia_dados["I"] = I; // corrente
   JSON_envia_dados["FP"] = FP; // fator potência
   JSON_envia_dados["Wh"] = Wh; // watt hora
   JSON_envia_dados["freq"] = Freq; // frequência
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(mutexJSON);
 
 }
 
@@ -379,9 +406,9 @@ void conexoes_wireless(void *pvParameters){
 
     float tempo_dep = millis();
     tempo_execucao_Task = tempo_dep - tempo_ant;
-    xSemaphoreTake(mutex, portMAX_DELAY );
+    xSemaphoreTake(mutexJSON, portMAX_DELAY );
     tempo_conexoes_wireless = tempo_execucao_Task;
-    xSemaphoreGive(mutex);
+    xSemaphoreGive(mutexJSON);
 
     // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -408,9 +435,9 @@ void enviar_dados(void *pvParameters){
     //Serial.println("Task enviar_dados em execução");
 
     // Usando semáforo pois o JSON está sendo usada em duas tasks com tempos de execução e prioridades diferentes.
-      xSemaphoreTake(mutex, portMAX_DELAY );
+      xSemaphoreTake(mutexJSON, portMAX_DELAY );
       serializeJson(JSON_envia_dados, dados_envio);
-      xSemaphoreGive(mutex);
+      xSemaphoreGive(mutexJSON);
 
       xSemaphoreTake(mutexMQTT, portMAX_DELAY );
       if(WiFi.status() == WL_CONNECTED && client.connected()) client.publish("subscriberTCC", dados_envio); // Publica o JSON no tópico do broker MQTT.
@@ -419,9 +446,12 @@ void enviar_dados(void *pvParameters){
     /* Obtém o High Water Mark da task atual.
    Lembre-se: tal informação é obtida em words! */
    // uxHighWaterMark = uxTaskGetStackHighWaterMark( NULtempo_jitter = tempo_dep - tempo_ant;
-    xSemaphoreTake(mutex, portMAX_DELAY );
+
+    float tempo_dep = millis();
+    tempo_execucao_Task = tempo_dep - tempo_ant;
+    xSemaphoreTake(mutexJSON, portMAX_DELAY );
     tempo_enviar_dados = tempo_execucao_Task;
-    xSemaphoreGive(mutex);
+    xSemaphoreGive(mutexJSON);
 
     // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -463,9 +493,9 @@ void receber_comandos(void *pvParameters){
     float tempo_dep = millis();  
 
     tempo_execucao_Task = tempo_dep - tempo_ant;
-    xSemaphoreTake(mutex, portMAX_DELAY );
+    xSemaphoreTake(mutexJSON, portMAX_DELAY );
     tempo_receber_comandos = tempo_execucao_Task;
-    xSemaphoreGive(mutex);
+    xSemaphoreGive(mutexJSON);
 
     // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
     vTaskDelayUntil(&xLastWakeTime, xDelay);  
@@ -492,10 +522,23 @@ void ler_sensores(void *pvParameters){
     //Serial.println("Task ler_sensores em execução");
 
     // testar lock/semafóro aqui
+    
     indice_bateria();
+
+    float teste_tempo_ant_request = millis();
     temperatura();
+    float teste_tempo_depois_request = millis();
+    Serial.print("Tempo levado pelo requestTemperatures: ");
+    Serial.println((teste_tempo_depois_request - teste_tempo_ant_request));
+
     pressao();
+
+    float teste_tempo_ant_wat = millis();
     wattimetro();
+    float teste_tempo_depois_wat = millis();
+    Serial.print("Tempo levado pelo watt: ");
+    Serial.println((teste_tempo_depois_wat - teste_tempo_ant_wat));
+
     // testar lock/semafóro aqui
     
     /* Obtém o High Water Mark da task atual.
@@ -504,9 +547,9 @@ void ler_sensores(void *pvParameters){
     
     float tempo_dep = millis();
     tempo_execucao_Task = tempo_dep - tempo_ant;
-    xSemaphoreTake(mutex, portMAX_DELAY );
+    xSemaphoreTake(mutexJSON, portMAX_DELAY );
     tempo_ler_sensores = tempo_execucao_Task;
-    xSemaphoreGive(mutex);
+    xSemaphoreGive(mutexJSON);
 
     // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -549,15 +592,16 @@ void Debug_MQTT(void *pvParameters){
     JSON_DEBUG_MQTT["Size_debug"] = (stack_size_debug_mqtt - uxHighWaterMark);
 
     // Usando semáforo pois o JSON está sendo usada em duas tasks com tempos de execução e prioridades diferentes.
-    xSemaphoreTake(mutex, portMAX_DELAY );
+    xSemaphoreTake(mutexJSON, portMAX_DELAY );
     JSON_DEBUG_MQTT["T_enviar_dados"] = tempo_enviar_dados;
     JSON_DEBUG_MQTT["T_conex_wirl"] = tempo_conexoes_wireless;
     JSON_DEBUG_MQTT["T_ler_sens"] = tempo_ler_sensores;
     JSON_DEBUG_MQTT["T_rec_com"] = tempo_receber_comandos;
     JSON_DEBUG_MQTT["T_debug"] = tempo_debug_mqtt;  
     JSON_DEBUG_MQTT["MinFreeHeap"] = ESP.getMinFreeHeap();
+    JSON_DEBUG_MQTT["PotSinalWiFi"] = WiFi.RSSI();
     serializeJson(JSON_DEBUG_MQTT, DEBUG_MQTT);
-    xSemaphoreGive(mutex);
+    xSemaphoreGive(mutexJSON);
 
     xSemaphoreTake(mutexMQTT, portMAX_DELAY );
     if(WiFi.status() == WL_CONNECTED && client.connected()) client.publish("subscriber_Debug_TCC", DEBUG_MQTT); // Publica o JSON no tópico do broker MQTT.
@@ -585,12 +629,12 @@ void setup(){
   //Serial2.begin(9600,SERIAL_8N1,25,33);
 
   // Declaração das variáveis no documeto JSON
-  JSON_envia_dados["T"][0] = Temp1; // T1 - Sensor do pino 1. No vetor está na posição 0. Está no GPIO 16.
-  JSON_envia_dados["T"][1] = Temp2; // T2 - Sensor do pino 2. No vetor está na posição 1. Está no GPIO 17.
-  JSON_envia_dados["T"][2] = Temp3; // T3 - Sensor do pino 3. No vetor está na posição 2. Está no GPIO 5.
-  JSON_envia_dados["T"][3] = Temp4; // T4 - Sensor do pino 4. No vetor está na posição 3. Está no GPIO 18.
-  JSON_envia_dados["T"][4] = Temp5; // T5 - Sensor do pino 5. No vetor está na posição 4. Está no GPIO 19.
-  JSON_envia_dados["T"][5] = Temp6; // T6 - Sensor do pino 6. No vetor está na posição 5. Está no GPIO 21.
+  JSON_envia_dados["T1"] = Temp1; // T1 - Sensor do pino 1. No vetor está na posição 0. Está no GPIO 16.
+  JSON_envia_dados["T2"] = Temp2; // T2 - Sensor do pino 2. No vetor está na posição 1. Está no GPIO 17.
+  JSON_envia_dados["T3"] = Temp3; // T3 - Sensor do pino 3. No vetor está na posição 2. Está no GPIO 5.
+  JSON_envia_dados["T4"] = Temp4; // T4 - Sensor do pino 4. No vetor está na posição 3. Está no GPIO 18.
+  JSON_envia_dados["T5"] = Temp5; // T5 - Sensor do pino 5. No vetor está na posição 4. Está no GPIO 19.
+  JSON_envia_dados["T6"] = Temp6; // T6 - Sensor do pino 6. No vetor está na posição 5. Está no GPIO 21.
   JSON_envia_dados["W"] = W; // potência Watts
   JSON_envia_dados["V"] = V; // tensão
   JSON_envia_dados["I"] = I; // corrente
@@ -614,7 +658,7 @@ void setup(){
   //wifiManager.erase();
   //wifiManager.resetSettings();
 
-  mutex = xSemaphoreCreateMutex(); // Cria mutex para variáveis compartilhadas entre as tasks.
+  mutexJSON = xSemaphoreCreateMutex(); // Cria mutex para variáveis compartilhadas entre as tasks.
   //mutexWifi = xSemaphoreCreateBinary();
   mutexWifi = xSemaphoreCreateMutex(); // Cria mutex para controle das tasks ativas ou esperando liberação. A tasks conexoes_wireless controla a liberação ou não conforme conexão WiFi ativa.
   mutexMQTT = xSemaphoreCreateMutex(); // Cria mutex para uso nas funções da biblioteca MQTT usada para enviar ou receber dados dos tópicos no broker MQTT.

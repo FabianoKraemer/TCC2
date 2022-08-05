@@ -28,9 +28,9 @@ StaticJsonDocument<MSG_BUFFER_SIZE> JSON_DEBUG_MQTT;
 char DEBUG_MQTT[tamanhoJSON]; // dados que serão recebidos do broker mqtt pros comandos do compressor e exaustores/coolers/ventiladores
 
 // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem:
-static long tempo_taskDelay_enviar_dados = 2000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 2000 milisegundos por padrão.
+static long tempo_taskDelay_enviar_dados = 3000; // Tempo do ticket da task que envia os dados por WiFi e/ou Bluetooth. 3000 milisegundos por padrão.
 static long tempo_taskDelay_receber_comandos = 1000; // Tempo de execução da Task que recebe os comandos via WiFi e/ou Bluetooth.
-static long tempo_taskDelay_ler_sensores = 3000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
+static long tempo_taskDelay_ler_sensores = 2000; // Tempo de execução da Task que aciona as tarefas de ler todos os sensores.
 static long tempo_taskDelay_conexoes_wireless = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
 static long tempo_taskDelay_debug_mqtt = 1000; // Tempo de loop da task de verificação e conexões WiFi e Bluetooth.
 // Tamanho da memoria alocada para as respectivas Tasks:

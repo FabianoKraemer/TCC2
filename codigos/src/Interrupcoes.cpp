@@ -3,8 +3,8 @@
 
 //static const unsigned long tempo_debounce = 300; // em milissegundos
 
-  unsigned long tempo_db = 300;
-  Debounce _deb1(tempo_db); // Debouncer para pinos sensores de temperatura
+  unsigned long tempo_db = 300; // em milissegundos
+  Debounce _deb(tempo_db); // Debouncer para pinos sensores de temperatura
 
   volatile static bool teste_vetor[6];
 
@@ -30,7 +30,7 @@ void Interrupcoes::retorna_vetor(volatile bool estado_pinos[6]){
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_1() {
 
-  if (_deb1.debounce(tempo_db)) {// If interrupt is valid (debounced)
+  if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
     if (digitalRead(DS18B20_1) == 0){
       teste_vetor[0] = true;
@@ -43,7 +43,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_1() {
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_2() {
 
-  if (_deb1.debounce(tempo_db)) {// If interrupt is valid (debounced)
+  if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
     if (digitalRead(DS18B20_2) == 0){
       teste_vetor[1] = true;
@@ -58,7 +58,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_3() {
 
   Serial.println("Interrupt 3");
 
-  if (_deb1.debounce(tempo_db)) {// If interrupt is valid (debounced)
+  if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
     if (digitalRead(DS18B20_3) == 0){
       teste_vetor[2] = true;
@@ -71,7 +71,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_3() {
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_4() {
 
-  if (_deb1.debounce(tempo_db)) {// If interrupt is valid (debounced)
+  if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
     if (digitalRead(DS18B20_4) == 0){
       teste_vetor[3] = true;
@@ -84,7 +84,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_4() {
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_5() {
 
-  if (_deb1.debounce(tempo_db)) {// If interrupt is valid (debounced)
+  if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
     if (digitalRead(DS18B20_5) == 0){
       teste_vetor[4] = true;
@@ -97,7 +97,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_5() {
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_6() {
 
-  if (_deb1.debounce(tempo_db)) {// If interrupt is valid (debounced)
+  if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
     if (digitalRead(DS18B20_6) == 0){
       teste_vetor[5] = true;
