@@ -20,6 +20,7 @@ long tempo_ler_sensores = 0;
 long tempo_receber_comandos = 0;
 long tempo_debug_mqtt = 0;
 
+
 /* Semáforos */
 // SemaphoreHandle_t xDebug_semaphore; // Usado inicialmente, alterado para mutex.
 // O semáforo do tipo mutex indica para o scheduler que o intervalo entre take e give possui prioridade máxima, ignorando o nível de prioridade das tasks.
@@ -36,8 +37,6 @@ const static uint8_t tamanho_fila_JSON_sensores = 1; // Tamanho da fila dos dado
 Interrupcoes interrupt(tempo_db_Pinos_temp); // Objeto das interrupções dos GPIOs dos sensores de temperatura.
 
 void atualizacao_OTA(){
-
-  if (WiFi.status() == WL_CONNECTED){ // Só entra na condição se o WiFi estiver conectado a uma rede.
   
     // Atende uma solicitação para a raiz e devolve a página 'verifica'.
     //
@@ -143,12 +142,6 @@ void atualizacao_OTA(){
     //           Serial.print("RSSI: ");
     // Serial.println( WiFi.RSSI());
 
-
-  }
-  else{
-    // Avisa se não conseguir conectar no WiFi
-    Serial.println("Falha ao conectar ao WiFi.");
-  }
 }
 
 void wifi(){
@@ -211,31 +204,36 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 }
 
+// Verifica a tensão da bateria, transforma em percentual e salva as duas informações em um objeto JSON.
 void indice_bateria(){
 
-  for (int i = 0; i < 100; i++){ // Faz 100 leituras da porta e soma.
-    percentual_bateria = analogRead(porta_bateria) + percentual_bateria;
-  }
-  percentual_bateria = percentual_bateria / 100; // Tira a média das 100 leituras
+  tensao_bateria = 0;
 
-  if (bateriaMax >= percentual_bateria) bateriaMax = percentual_bateria; // Salva o maior valor encontrado na leitura da carga da bateria.
-  if (bateriaMin <= percentual_bateria) bateriaMin = percentual_bateria; // Salva o menor valor encontrado na leitura da carga da bateria.
+  for (int i = 0; i < 100; i++){ // Faz 100 leituras da porta e soma.
+    tensao_bateria = analogRead(porta_bateria) + tensao_bateria;
+  }
+  tensao_bateria = tensao_bateria / 100; // Tira a média das 100 leituras
+
+  if (bateriaMax >= tensao_bateria) bateriaMax = tensao_bateria; // Salva o maior valor encontrado na leitura da carga da bateria.
+  if (bateriaMin <= tensao_bateria) bateriaMin = tensao_bateria; // Salva o menor valor encontrado na leitura da carga da bateria.
 
   xSemaphoreTake(mutexJSON, portMAX_DELAY);
   JSON_envia_dados["bateriaMax"] = bateriaMax;
   JSON_envia_dados["bateriaMin"] = bateriaMin;
+  JSON_envia_dados["tensaoBat"] = tensao_bateria;
   xSemaphoreGive(mutexJSON);
 
-  int indiceBateria = map(percentual_bateria, 2800, 4094, 0, 100); // Mapeia os valores lidos para o intervalo de 0 a 100, para ficar em percentual.
+  int percentual_bateria = map(tensao_bateria, 2800, 4094, 0, 100); // Mapeia os valores lidos para o intervalo de 0 a 100, para ficar em percentual.
 
-  if (indiceBateria <= 0) indiceBateria = 0; // Caso ocorra alguma leitura menor que 2800 antes do map, fica valor negativo, estabelece o valor 0 para que não ocorra isso.
-  else if (indiceBateria >= 100) indiceBateria = 100; // Caso o valor lido tenha ficado maior que 4094, para não dar valor maior que 100, estabelece esse limite. 
+  if (percentual_bateria <= 0) percentual_bateria = 0; // Caso ocorra alguma leitura menor que 2800 antes do map, fica valor negativo, estabelece o valor 0 para que não ocorra isso.
+  else if (percentual_bateria >= 100) percentual_bateria = 100; // Caso o valor lido tenha ficado maior que 4094, para não dar valor maior que 100, estabelece esse limite. 
 
   xSemaphoreTake(mutexJSON, portMAX_DELAY);
-  JSON_envia_dados["Bat"] = indiceBateria;
+  JSON_envia_dados["Bat"] = percentual_bateria;
   xSemaphoreGive(mutexJSON);
 }
 
+// Verifica o vetor dos sensores de temperatura, aloca o ID do sensor na posição do vetor correspondente, faz um request pra todos, e através do endereço de cada um, solicita a temperatura e salva no objeto JSON.
 void temperatura(){
     
     interrupt.atualizar_estado_portas(); // Rotina para atualizar o estado das portas dos conectores de temperatura.
@@ -243,7 +241,7 @@ void temperatura(){
    
     sensortemp.requestTemperatures(); // Adiciona pelo menos meio segundo de tempo de processamento, mas varia muito.
   
-    for (int n = 0; n <= 5; n++){
+    for (int n = 0; n <= 5; n++){ 
       
       if (sensores_conectados[n]) { // Se no n específico, tiver um sensor conectado, entrará na condição para pegar o endereço do sensor e medir a temperatura.
         sensortemp.getAddress(Thermometer, n); // Pega o endereço de cada sensor conectado.
@@ -271,7 +269,12 @@ void temperatura(){
       }
     }
 
-
+    Serial.println(digitalRead(16));
+    Serial.println(digitalRead(17));
+    Serial.println(digitalRead(5));
+    Serial.println(digitalRead(18));
+    Serial.println(digitalRead(19));
+    Serial.println(digitalRead(21));
 
     //Serial.println(Temps[0]);
     //Serial.println(Temps[1]);
@@ -290,6 +293,7 @@ void temperatura(){
 
 }
 
+// Lê 50 vezes cada pino dos sensores de pressão, tira a média, tranforma em bar e grava no objeto JSON
 void pressao(){
 
   P1 = 0;
@@ -322,6 +326,7 @@ void pressao(){
 
 }
 
+// Requisita para a biblioteca do wattímetro os valores, e salva no objeto JSON
 void wattimetro(){
 
   V = pzem.voltage(); // tensão
@@ -352,6 +357,7 @@ void wattimetro(){
 
 }
 
+// Tarefa para verificar os estados das conexões wireless, se conectando automaticamente em conexões previamente salvas na flash, ou abre o portal de configuração WiFi caso não consiga se conectar
 void conexoes_wireless(void *pvParameters){
 
   const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_conexoes_wireless); // Transforma o tempo de delay de milissegundos para tickets.
@@ -378,6 +384,7 @@ void conexoes_wireless(void *pvParameters){
     while (WiFi.status() != WL_CONNECTED && ativar_wifi == true){
       wifiManager.process();
       delay(200); // A função delay implementada na API do ESP32 é tratado internamente como vTaskDelay
+      atualizacao_OTA();
     }
 
     if (WiFi.status() == WL_CONNECTED){
@@ -385,7 +392,7 @@ void conexoes_wireless(void *pvParameters){
       //Serial.println("conectado");
       //wifiManager.stopConfigPortal();
       //wifiManager.stopWebPortal();
-      //atualizacao_OTA();      
+           
       
       xSemaphoreTake(mutexMQTT, portMAX_DELAY );
       conexao_mqtt = client.connected();      
@@ -416,6 +423,7 @@ void conexoes_wireless(void *pvParameters){
   }
 }
 
+// Tarefa que pega o objeto JSON dos sensores, serializa ele e envia para o subscriber MQTT correspondente.
 void enviar_dados(void *pvParameters){
 
   const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_enviar_dados); // Transforma o tempo de delay de milissegundos para tickets
@@ -425,6 +433,7 @@ void enviar_dados(void *pvParameters){
 
   for(;;){
 
+    float tempo_inicio_TED = millis();
     xSemaphoreTake(mutexWifi, portMAX_DELAY );
     xSemaphoreGive(mutexWifi);
 
@@ -456,10 +465,16 @@ void enviar_dados(void *pvParameters){
     // Para diminuir o jitter, é utilizado o vTaskDelay until, que garante uma execução em intervalos constantes, baseado em tickets, e não em tempo contado em millis.
     vTaskDelayUntil(&xLastWakeTime, xDelay);
     //vTaskDelay((tempo_taskDelay_enviar_dados - tempo_execucao_Task)/portTICK_PERIOD_MS);
+
+    // Calculo para verificação se o ciclo da tarefa está levando o tempo determinado.
+    tempo_dep = millis();
+    JSON_envia_dados["TED"] = tempo_dep - tempo_inicio_TED;
+
   }
 
 }
 
+// Tarefa para verificar no publisher MQTT se ouve algum comando, recebe-o, separa e realiza o comando.
 void receber_comandos(void *pvParameters){
 
   const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_receber_comandos); // Transforma o tempo de delay de milissegundos para tickets
@@ -504,6 +519,7 @@ void receber_comandos(void *pvParameters){
   }
 }
 
+// Tarefa que lê todos os sensores e salva no objeto JSON correspondente de cada um.
 void ler_sensores(void *pvParameters){
 
   const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_ler_sensores); // Transforma o tempo de delay de milissegundos para tickets
@@ -557,6 +573,7 @@ void ler_sensores(void *pvParameters){
   }
 }
 
+// Tarefa para "telemetria" do sistema embarcado, verifica uma série de informações, salva em um objeto JSON específico da tarefa, serializa e envia para o subscriber MQTT correspondente.
 void Debug_MQTT(void *pvParameters){
 
   const TickType_t xDelay = pdMS_TO_TICKS(tempo_taskDelay_debug_mqtt); // Transforma o tempo de delay de milissegundos para tickets
@@ -625,6 +642,13 @@ void setup(){
   pinMode(33, INPUT); // TX do Pzem
   pinMode(32, INPUT); // GPIO bateria
 
+  pinMode(16, INPUT);
+  pinMode(17, INPUT);
+  pinMode(5, INPUT);
+  pinMode(18, INPUT);
+  pinMode(19, INPUT);
+  pinMode(21, INPUT);  
+
   SerialController.begin(9600,SERIAL_8N1,25,33); // Ativando o hardware serial para conexão com o Wattimetro PZEM
   //Serial2.begin(9600,SERIAL_8N1,25,33);
 
@@ -643,7 +667,7 @@ void setup(){
   JSON_envia_dados["freq"] = Freq; // frequência
   JSON_envia_dados["P1"] = P1; // Sensor de pressão 1. Está no GPIO 35
   JSON_envia_dados["P2"] = P2; // Sensor de pressão 2. Está no GPIO 34
-  JSON_envia_dados["Bat"] = percentual_bateria; // Percentual da bateria
+  JSON_envia_dados["Bat"] = tensao_bateria; // Percentual da bateria
   JSON_envia_dados["TED"] = tempo_taskDelay_enviar_dados; // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem.
   JSON_envia_dados["Gas"] = tipo_gas; // Tempo de envio dos dados lidos dos sensores para a aplicação no Android ou nuvem.
 

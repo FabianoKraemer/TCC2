@@ -8,8 +8,8 @@
 #include <WiFi.h> // Biblioteca para utilizar o WiFi da ESP32.
 #include <WebServer.h> //Local WebServer used to serve the configuration portal ( https://github.com/zhouhan0126/WebServer-esp32 )
 #include <DNSServer.h> //Local DNS Server used for redirecting all requests to the configuration portal ( https://github.com/zhouhan0126/DNSServer---esp32 )
-//#include <WiFiClient.h>
-//#include <Update.h>
+#include <WiFiClient.h>
+#include <Update.h>
 #include <WiFiManager.h> // Biblioteca do WiFiManager. ESP quando não consegue se conectar numa rede WiFi, ativa modo local para se conectar numa rede disponível.
 #include <PubSubClient.h> // Biblioteca do MQTT. Conecta, verifica servidor broken, publica e escuta/recebe dados do broker MQTT.
 #include <ArduinoJson.h> // Json pra Arduino, serializa e desserializa.

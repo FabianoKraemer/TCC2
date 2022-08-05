@@ -17,7 +17,7 @@ Interrupcoes::Interrupcoes(unsigned long tempo){
 }
 
 Interrupcoes::~Interrupcoes(){
-    Serial.println("Destrutor objeto das interrupções");
+    //Serial.println("Destrutor objeto das interrupções");
 }
 
 void Interrupcoes::tempo_debounce(unsigned long teste){
@@ -55,8 +55,6 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_2() {
 }
 
 void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_3() {
-
-  Serial.println("Interrupt 3");
 
   if (_deb.debounce(tempo_db)) {// Entra no objeto debounce para realizar o debounced.
     portENTER_CRITICAL_ISR(&mux);
@@ -105,6 +103,7 @@ void IRAM_ATTR Interrupcoes::interrupcao_DS18B20_6() {
       teste_vetor[5] = false;
     }
     portEXIT_CRITICAL_ISR(&mux);
+
   }
 }
 
@@ -113,7 +112,7 @@ void Interrupcoes::ativar_interrupcoes(){
 
   attachInterrupt(digitalPinToInterrupt(DS18B20_1), interrupcao_DS18B20_1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(DS18B20_2), interrupcao_DS18B20_2, CHANGE);
-  //attachInterrupt(digitalPinToInterrupt(DS18B20_3), interrupcao_DS18B20_3, CHANGE); está com problema na porta física. Quando pino conectado, deveria fazer a tensão ir a 0, mas está em 1.9V
+  attachInterrupt(digitalPinToInterrupt(DS18B20_3), interrupcao_DS18B20_3, CHANGE); // está com problema, se ativado, a ESP crasha ao conectar (e tb não pode bootar em high)
   attachInterrupt(digitalPinToInterrupt(DS18B20_4), interrupcao_DS18B20_4, CHANGE);
   attachInterrupt(digitalPinToInterrupt(DS18B20_5), interrupcao_DS18B20_5, CHANGE);
   attachInterrupt(digitalPinToInterrupt(DS18B20_6), interrupcao_DS18B20_6, CHANGE);
@@ -141,3 +140,4 @@ void Interrupcoes::atualizar_estado_portas(){
   else if (digitalRead(DS18B20_6) == 1)teste_vetor[5] = false;
 
 }
+

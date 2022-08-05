@@ -1,5 +1,13 @@
 # TCC2
 
+Versão 1.0
+
+- Versão apresentada no TCC.
+
+Versão 0.63
+
+- Versão estável, com alguns serial prints para testes nas funções de temperatura e wattimetro.
+
 Versão 0.62
 
 - Alterações no main

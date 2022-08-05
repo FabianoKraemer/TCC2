@@ -80,7 +80,7 @@ static unsigned int porta_P2 = 34;
 
 
 // Indicador de percentual de carga da bateria.
-float percentual_bateria = 0;
+float tensao_bateria = 0;
 float bateriaMin = 5000;
 float bateriaMax = 0;
 const int porta_bateria = 32;
